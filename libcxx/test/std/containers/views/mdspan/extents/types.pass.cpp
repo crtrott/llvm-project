@@ -1,3 +1,23 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//===----------------------------------------------------------------------===//
+// UNSUPPORTED: c++03, c++11, c++14, c++17, c++20
+
+// <mdspan>
+
+// template<class IndexType, size_t... Extents>
+// class extents {
+// public:
+//  // types
+//  using index_type = IndexType;
+//  using size_type = make_unsigned_t<index_type>;
+//  using rank_type = size_t;
+//
+
 #include <mdspan>
 #include <type_traits>
 #include <concepts>

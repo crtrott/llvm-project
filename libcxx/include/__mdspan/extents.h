@@ -169,7 +169,9 @@ struct __index_sequence_scan_impl<_R, _FirstVal> {
 #  if defined(__NVCC__) || defined(__NVCOMPILER)
   // NVCC warns about pointless comparison with 0 for _R==0 and r being const
   // evaluatable and also 0.
-  constexpr static size_t get(size_t __r) { return static_cast<int64_t>(_R) > static_cast<int64_t>(__r) ? _FirstVal : 0; }
+  constexpr static size_t get(size_t __r) {
+    return static_cast<int64_t>(_R) > static_cast<int64_t>(__r) ? _FirstVal : 0;
+  }
 #  else
   constexpr static size_t get(size_t __r) { return _R > __r ? _FirstVal : 0; }
 #  endif
@@ -218,7 +220,7 @@ struct __maybe_static_array {
 
 private:
   // Static values member
-  using __static_vals_t                    = __static_array<_TStatic, _Values...>;
+  using __static_vals_t                   = __static_array<_TStatic, _Values...>;
   constexpr static size_t __size_         = sizeof...(_Values);
   constexpr static size_t __size_dynamic_ = ((_Values == _DynTag) + ... + 0);
 
@@ -229,7 +231,6 @@ private:
   using __dyn_map_t = __index_sequence_scan_impl<0, static_cast<size_t>(_Values == _DynTag)...>;
 
 public:
-
   constexpr __maybe_static_array() = default;
 
   // constructor for all static values
@@ -276,9 +277,10 @@ public:
       if (__static_val == _DynTag) {
         __dyn_vals_[__dyn_map_t::get(__r)] = __values[__r];
       }
-// Precondition check
+      // Precondition check
       else
-        _LIBCPP_ASSERT(__values[__r] == static_cast<_TDynamic>(__static_val), "extents construction: mismatch of provided arguments with static extents.");
+        _LIBCPP_ASSERT(__values[__r] == static_cast<_TDynamic>(__static_val),
+                       "extents construction: mismatch of provided arguments with static extents.");
     }
   }
 
@@ -291,9 +293,10 @@ public:
       if (__static_val == _DynTag) {
         __dyn_vals_[__dyn_map_t::get(__r)] = static_cast<_TDynamic>(__vals[__r]);
       }
-// Precondition check
+      // Precondition check
       else
-       _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val),"extents construction: mismatch of provided arguments with static extents.");
+        _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val),
+                       "extents construction: mismatch of provided arguments with static extents.");
     }
   }
 
@@ -306,9 +309,10 @@ public:
       if (__static_val == _DynTag) {
         __dyn_vals_[__dyn_map_t::get(__r)] = static_cast<_TDynamic>(__vals[__r]);
       }
-// Precondition check
+      // Precondition check
       else
-        _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val), "extents construction: mismatch of provided arguments with static extents.");
+        _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val),
+                       "extents construction: mismatch of provided arguments with static extents.");
     }
   }
 
@@ -375,13 +379,13 @@ public:
   constexpr explicit extents(_OtherIndexTypes... __dynvals) noexcept : __vals_(static_cast<index_type>(__dynvals)...) {}
 
   template <class _OtherIndexType, size_t _Num>
-    requires(is_convertible_v<_OtherIndexType, index_type>&& is_nothrow_constructible_v<index_type, _OtherIndexType> &&
+    requires(is_convertible_v<_OtherIndexType, index_type> && is_nothrow_constructible_v<index_type, _OtherIndexType> &&
              (_Num == __rank_ || _Num == __rank_dynamic_))
   explicit(_Num != __rank_dynamic_) constexpr extents(const array<_OtherIndexType, _Num>& __exts) noexcept
       : __vals_(std::move(__exts)) {}
 
   template <class _OtherIndexType, size_t _Num>
-    requires(is_convertible_v<_OtherIndexType, index_type>&& is_nothrow_constructible_v<index_type, _OtherIndexType> &&
+    requires(is_convertible_v<_OtherIndexType, index_type> && is_nothrow_constructible_v<index_type, _OtherIndexType> &&
              (_Num == __rank_ || _Num == __rank_dynamic_))
   explicit(_Num != __rank_dynamic_) constexpr extents(const span<_OtherIndexType, _Num>& __exts) noexcept
       : __vals_(std::move(__exts)) {}
@@ -397,8 +401,7 @@ private:
       std::integral_constant<size_t, _DynCount>,
       std::integral_constant<size_t, _R>,
       const _OtherExtents& __exts,
-      _DynamicValues... __dynamic_values)
-  noexcept {
+      _DynamicValues... __dynamic_values) noexcept {
     return __construct_vals_from_extents(
         std::integral_constant<size_t, _DynCount + 1>(),
         std::integral_constant<size_t, _R + 1>(),
@@ -413,10 +416,12 @@ private:
       std::integral_constant<size_t, _DynCount>,
       std::integral_constant<size_t, _R>,
       const _OtherExtents& __exts,
-      _DynamicValues... __dynamic_values)
-  noexcept {
+      _DynamicValues... __dynamic_values) noexcept {
     return __construct_vals_from_extents(
-        std::integral_constant<size_t, _DynCount>(), std::integral_constant<size_t, _R + 1>(), __exts, __dynamic_values...);
+        std::integral_constant<size_t, _DynCount>(),
+        std::integral_constant<size_t, _R + 1>(),
+        __exts,
+        __dynamic_values...);
   }
 
   template <size_t _DynCount, size_t _R, class _OtherExtents, class... _DynamicValues>
@@ -425,8 +430,9 @@ private:
       std::integral_constant<size_t, _DynCount>,
       std::integral_constant<size_t, _R>,
       const _OtherExtents&,
-      _DynamicValues... __dynamic_values)
-  noexcept { return __vals_t{static_cast<index_type>(__dynamic_values)...}; }
+      _DynamicValues... __dynamic_values) noexcept {
+    return __vals_t{static_cast<index_type>(__dynamic_values)...};
+  }
 
 public:
   // Converting constructor from other extents specializations
@@ -437,13 +443,14 @@ public:
       (((_Extents != dynamic_extent) && (_OtherExtents == dynamic_extent)) || ...) ||
       (std::numeric_limits<index_type>::max() <
        std::numeric_limits<_OtherIndexType>::max())) constexpr extents(const extents<_OtherIndexType, _OtherExtents...>&
-                                                                          __other) noexcept
+                                                                           __other) noexcept
       : __vals_(__construct_vals_from_extents(
             std::integral_constant<size_t, 0>(), std::integral_constant<size_t, 0>(), __other)) {}
 
   // Comparison operator
   template <class _OtherIndexType, size_t... _OtherExtents>
-  friend constexpr bool operator==(const extents& __lhs, const extents<_OtherIndexType, _OtherExtents...>& __rhs) noexcept {
+  friend constexpr bool
+  operator==(const extents& __lhs, const extents<_OtherIndexType, _OtherExtents...>& __rhs) noexcept {
     bool __value = true;
     if constexpr (rank() != sizeof...(_OtherExtents)) {
       __value = false;
@@ -455,7 +462,8 @@ public:
   }
 
   template <class _OtherIndexType, size_t... _OtherExtents>
-  friend constexpr bool operator!=(extents const& __lhs, extents<_OtherIndexType, _OtherExtents...> const& __rhs) noexcept {
+  friend constexpr bool
+  operator!=(extents const& __lhs, extents<_OtherIndexType, _OtherExtents...> const& __rhs) noexcept {
     return !(__lhs == __rhs);
   }
 };
@@ -468,7 +476,8 @@ struct __make_dextents;
 
 template <class _IndexType, size_t _Rank, size_t... _ExtentsPack>
 struct __make_dextents< _IndexType, _Rank, extents<_IndexType, _ExtentsPack...>> {
-  using type = typename __make_dextents< _IndexType, _Rank - 1, extents<_IndexType, dynamic_extent, _ExtentsPack...>>::type;
+  using type =
+      typename __make_dextents< _IndexType, _Rank - 1, extents<_IndexType, dynamic_extent, _ExtentsPack...>>::type;
 };
 
 template <class _IndexType, size_t... _ExtentsPack>
