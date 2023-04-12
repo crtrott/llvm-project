@@ -91,34 +91,34 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 namespace __mdspan_detail {
 
 // ------------------------------------------------------------------
-// ------------ static_array ----------------------------------------
+// ------------ __static_array --------------------------------------
 // ------------------------------------------------------------------
 // array like class which provides an array of static values with get
 
 // Implementation of Static Array with recursive implementation of get.
 template <size_t R, class T, T... Extents>
-struct static_array_impl;
+struct __static_array_impl;
 
 template <size_t R, class T, T FirstExt, T... Extents>
-struct static_array_impl<R, T, FirstExt, Extents...> {
+struct __static_array_impl<R, T, FirstExt, Extents...> {
   constexpr static T get(size_t r) noexcept {
     if (r == R)
       return FirstExt;
     else
-      return static_array_impl<R + 1, T, Extents...>::get(r);
+      return __static_array_impl<R + 1, T, Extents...>::get(r);
   }
   template <size_t r>
   constexpr static T get() {
     if constexpr (r == R)
       return FirstExt;
     else
-      return static_array_impl<R + 1, T, Extents...>::template get<r>();
+      return __static_array_impl<R + 1, T, Extents...>::template get<r>();
   }
 };
 
 // End the recursion
 template <size_t R, class T, T FirstExt>
-struct static_array_impl<R, T, FirstExt> {
+struct __static_array_impl<R, T, FirstExt> {
   constexpr static T get(size_t) noexcept { return FirstExt; }
   template <size_t>
   constexpr static T get() {
@@ -128,7 +128,7 @@ struct static_array_impl<R, T, FirstExt> {
 
 // Don't start recursion if size 0
 template <class T>
-struct static_array_impl<0, T> {
+struct __static_array_impl<0, T> {
   constexpr static T get(size_t) noexcept { return T(); }
   template <size_t>
   constexpr static T get() {
@@ -138,7 +138,7 @@ struct static_array_impl<0, T> {
 
 // Static array, provides get<r>(), get(r) and operator[r]
 template <class T, T... Values>
-struct static_array : public static_array_impl<0, T, Values...> {
+struct __static_array : public __static_array_impl<0, T, Values...> {
 public:
   using value_type = T;
 
@@ -154,20 +154,20 @@ public:
 
 // Recursive implementation for get
 template <size_t R, size_t... Values>
-struct index_sequence_scan_impl;
+struct __index_sequence_scan_impl;
 
 template <size_t R, size_t FirstVal, size_t... Values>
-struct index_sequence_scan_impl<R, FirstVal, Values...> {
+struct __index_sequence_scan_impl<R, FirstVal, Values...> {
   constexpr static size_t get(size_t r) {
     if (r > R)
-      return FirstVal + index_sequence_scan_impl<R + 1, Values...>::get(r);
+      return FirstVal + __index_sequence_scan_impl<R + 1, Values...>::get(r);
     else
       return 0;
   }
 };
 
 template <size_t R, size_t FirstVal>
-struct index_sequence_scan_impl<R, FirstVal> {
+struct __index_sequence_scan_impl<R, FirstVal> {
 #  if defined(__NVCC__) || defined(__NVCOMPILER)
   // NVCC warns about pointless comparison with 0 for R==0 and r being const
   // evaluatable and also 0.
@@ -177,34 +177,34 @@ struct index_sequence_scan_impl<R, FirstVal> {
 #  endif
 };
 template <>
-struct index_sequence_scan_impl<0> {
+struct __index_sequence_scan_impl<0> {
   constexpr static size_t get(size_t) { return 0; }
 };
 
 // ------------------------------------------------------------------
-// ------------ possibly_empty_array  -------------------------------
+// ------------ __possibly_empty_array  -----------------------------
 // ------------------------------------------------------------------
 
 // array like class which provides get function and operator [], and
 // has a specialization for the size 0 case.
-// This is needed to make the maybe_static_array be truly empty, for
+// This is needed to make the __maybe_static_array be truly empty, for
 // all static values.
 
 template <class T, size_t N>
-struct possibly_empty_array {
+struct __possibly_empty_array {
   T vals[N];
   constexpr T& operator[](size_t r) { return vals[r]; }
   constexpr const T& operator[](size_t r) const { return vals[r]; }
 };
 
 template <class T>
-struct possibly_empty_array<T, 0> {
+struct __possibly_empty_array<T, 0> {
   constexpr T operator[](size_t) { return T(); }
   constexpr const T operator[](size_t) const { return T(); }
 };
 
 // ------------------------------------------------------------------
-// ------------ maybe_static_array ----------------------------------
+// ------------ __maybe_static_array --------------------------------
 // ------------------------------------------------------------------
 
 // array like class which has a mix of static and runtime values but
@@ -212,23 +212,23 @@ struct possibly_empty_array<T, 0> {
 // The type of the static and the runtime values can be different.
 // The position of a dynamic value is indicated through a tag value.
 template <class TDynamic, class TStatic, TStatic dyn_tag, TStatic... Values>
-struct maybe_static_array {
+struct __maybe_static_array {
   static_assert(is_convertible<TStatic, TDynamic>::value,
-                "maybe_static_array: TStatic must be convertible to TDynamic");
+                "__maybe_static_array: TStatic must be convertible to TDynamic");
   static_assert(is_convertible<TDynamic, TStatic>::value,
-                "maybe_static_array: TDynamic must be convertible to TStatic");
+                "__maybe_static_array: TDynamic must be convertible to TStatic");
 
 private:
   // Static values member
-  using static_vals_t                    = static_array<TStatic, Values...>;
+  using static_vals_t                    = __static_array<TStatic, Values...>;
   constexpr static size_t m_size         = sizeof...(Values);
   constexpr static size_t m_size_dynamic = ((Values == dyn_tag) + ... + 0);
 
   // Dynamic values member
-  [[no_unique_address]] possibly_empty_array<TDynamic, m_size_dynamic> m_dyn_vals;
+  [[no_unique_address]] __possibly_empty_array<TDynamic, m_size_dynamic> m_dyn_vals;
 
   // static mapping of indices to the position in the dynamic values array
-  using dyn_map_t = index_sequence_scan_impl<0, static_cast<size_t>(Values == dyn_tag)...>;
+  using dyn_map_t = __index_sequence_scan_impl<0, static_cast<size_t>(Values == dyn_tag)...>;
 
 public:
   // two types for static and dynamic values
@@ -237,45 +237,45 @@ public:
   // tag value indicating dynamic value
   constexpr static static_value_type tag_value = dyn_tag;
 
-  constexpr maybe_static_array() = default;
+  constexpr __maybe_static_array() = default;
 
   // constructor for all static values
   // TODO: add precondition check?
   template <class... Vals>
     requires((m_size_dynamic == 0) && (sizeof...(Vals) > 0))
-  constexpr maybe_static_array(Vals...) : m_dyn_vals{} {}
+  constexpr __maybe_static_array(Vals...) : m_dyn_vals{} {}
 
   // constructors from dynamic values only
   template <class... DynVals>
     requires(sizeof...(DynVals) == m_size_dynamic && m_size_dynamic > 0)
-  constexpr maybe_static_array(DynVals... vals) : m_dyn_vals{static_cast<TDynamic>(vals)...} {}
+  constexpr __maybe_static_array(DynVals... vals) : m_dyn_vals{static_cast<TDynamic>(vals)...} {}
 
   template <class T, size_t N>
     requires(N == m_size_dynamic && N > 0)
-  constexpr maybe_static_array(const std::array<T, N>& vals) {
+  constexpr __maybe_static_array(const std::array<T, N>& vals) {
     for (size_t r = 0; r < N; r++)
       m_dyn_vals[r] = static_cast<TDynamic>(vals[r]);
   }
 
   template <class T, size_t N>
     requires(N == m_size_dynamic && N == 0)
-  constexpr maybe_static_array(const std::array<T, N>&) : m_dyn_vals{} {}
+  constexpr __maybe_static_array(const std::array<T, N>&) : m_dyn_vals{} {}
 
   template <class T, size_t N>
     requires(N == m_size_dynamic && N > 0)
-  constexpr maybe_static_array(const std::span<T, N>& vals) {
+  constexpr __maybe_static_array(const std::span<T, N>& vals) {
     for (size_t r = 0; r < N; r++)
       m_dyn_vals[r] = static_cast<TDynamic>(vals[r]);
   }
 
   template <class T, size_t N>
     requires(N == m_size_dynamic && N == 0)
-  constexpr maybe_static_array(const std::span<T, N>&) : m_dyn_vals{} {}
+  constexpr __maybe_static_array(const std::span<T, N>&) : m_dyn_vals{} {}
 
   // constructors from all values
   template <class... DynVals>
     requires(sizeof...(DynVals) != m_size_dynamic && m_size_dynamic > 0)
-  constexpr maybe_static_array(DynVals... vals) {
+  constexpr __maybe_static_array(DynVals... vals) {
     static_assert((sizeof...(DynVals) == m_size), "Invalid number of values.");
     TDynamic values[m_size]{static_cast<TDynamic>(vals)...};
     for (size_t r = 0; r < m_size; r++) {
@@ -294,7 +294,7 @@ public:
 
   template <class T, size_t N>
     requires(N != m_size_dynamic && m_size_dynamic > 0)
-  constexpr maybe_static_array(const std::array<T, N>& vals) {
+  constexpr __maybe_static_array(const std::array<T, N>& vals) {
     static_assert((N == m_size), "Invalid number of values.");
 // Precondition check
 #  ifdef _MDSPAN_DEBUG
@@ -316,7 +316,7 @@ public:
 
   template <class T, size_t N>
     requires(N != m_size_dynamic && m_size_dynamic > 0)
-  constexpr maybe_static_array(const std::span<T, N>& vals) {
+  constexpr __maybe_static_array(const std::span<T, N>& vals) {
     static_assert((N == m_size) || (m_size == dynamic_extent));
 #  ifdef _MDSPAN_DEBUG
     assert(N == m_size);
@@ -373,8 +373,8 @@ private:
   constexpr static rank_type m_rank         = sizeof...(Extents);
   constexpr static rank_type m_rank_dynamic = ((Extents == dynamic_extent) + ... + 0);
 
-  // internal storage type using maybe_static_array
-  using vals_t = __mdspan_detail::maybe_static_array<IndexType, size_t, dynamic_extent, Extents...>;
+  // internal storage type using __maybe_static_array
+  using vals_t = __mdspan_detail::__maybe_static_array<IndexType, size_t, dynamic_extent, Extents...>;
   [[no_unique_address]] vals_t m_vals;
 
 public:
@@ -389,7 +389,7 @@ public:
   constexpr extents() noexcept = default;
 
   // Construction from just dynamic or all values.
-  // Precondition check is deferred to maybe_static_array constructor
+  // Precondition check is deferred to __maybe_static_array constructor
   template <class... OtherIndexTypes>
     requires((is_convertible_v<OtherIndexTypes, index_type> && ...) &&
              (is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) &&
