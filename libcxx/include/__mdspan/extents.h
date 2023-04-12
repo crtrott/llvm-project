@@ -14,8 +14,8 @@
 //
 //===---------------------------------------------------------------------===//
 
-#ifndef _LIBCPP_EXTENTS
-#define _LIBCPP_EXTENTS
+#ifndef _LIBCPP___MDSPAN_EXTENTS_H
+#define _LIBCPP___MDSPAN_EXTENTS_H
 
 /*
     extents synopsis
@@ -86,9 +86,9 @@ _LIBCPP_PUSH_MACROS
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-#if _LIBCPP_STD_VER > 20
+#if _LIBCPP_STD_VER >= 23
 
-namespace detail {
+namespace __mdspan_detail {
 
 // ------------------------------------------------------------------
 // ------------ static_array ----------------------------------------
@@ -348,7 +348,7 @@ public:
   constexpr static size_t size_dynamic() { return m_size_dynamic; }
 };
 
-} // namespace detail
+} // namespace __mdspan_detail
 
 // ------------------------------------------------------------------
 // ------------ extents ---------------------------------------------
@@ -374,7 +374,7 @@ private:
   constexpr static rank_type m_rank_dynamic = ((Extents == dynamic_extent) + ... + 0);
 
   // internal storage type using maybe_static_array
-  using vals_t = detail::maybe_static_array<IndexType, size_t, dynamic_extent, Extents...>;
+  using vals_t = __mdspan_detail::maybe_static_array<IndexType, size_t, dynamic_extent, Extents...>;
   [[no_unique_address]] vals_t m_vals;
 
 public:
@@ -483,7 +483,7 @@ public:
 };
 
 // Recursive helper classes to implement dextents alias for extents
-namespace detail {
+namespace __mdspan_detail {
 
 template <class IndexType, size_t Rank, class Extents = extents<IndexType>>
 struct __make_dextents;
@@ -498,18 +498,18 @@ struct __make_dextents< IndexType, 0, extents<IndexType, ExtentsPack...>> {
   using type = extents<IndexType, ExtentsPack...>;
 };
 
-} // end namespace detail
+} // end namespace __mdspan_detail
 
 // [mdspan.extents.dextents], alias template
 template <class IndexType, size_t Rank>
-using dextents = typename detail::__make_dextents<IndexType, Rank>::type;
+using dextents = typename __mdspan_detail::__make_dextents<IndexType, Rank>::type;
 
 // Deduction guide for extents
 template <class... IndexTypes>
 extents(IndexTypes...) -> extents<size_t, size_t((IndexTypes(), dynamic_extent))...>;
 
 // Helper type traits for identifying a class as extents.
-namespace detail {
+namespace __mdspan_detail {
 
 template <class T>
 struct __is_extents : ::std::false_type {};
@@ -520,12 +520,12 @@ struct __is_extents<extents<IndexType, ExtentsPack...>> : ::std::true_type {};
 template <class T>
 inline constexpr bool __is_extents_v = __is_extents<T>::value;
 
-} // namespace detail
+} // namespace __mdspan_detail
 
-#endif // _LIBCPP_STD_VER > 20
+#endif // _LIBCPP_STD_VER >= 23
 
 _LIBCPP_END_NAMESPACE_STD
 
 _LIBCPP_POP_MACROS
 
-#endif // _LIBCPP_EXTENTS
+#endif // _LIBCPP___MDSPAN_EXTENTS_H
