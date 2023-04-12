@@ -96,49 +96,49 @@ namespace __mdspan_detail {
 // array like class which provides an array of static values with get
 
 // Implementation of Static Array with recursive implementation of get.
-template <size_t _R, class _T, _T... _Extents>
+template <size_t _Idx, class _Tp, _Tp... _Extents>
 struct __static_array_impl;
 
-template <size_t _R, class _T, _T _FirstExt, _T... _Extents>
-struct __static_array_impl<_R, _T, _FirstExt, _Extents...> {
-  constexpr static _T get(size_t __r) noexcept {
-    if (__r == _R)
+template <size_t _Idx, class _Tp, _Tp _FirstExt, _Tp... _Extents>
+struct __static_array_impl<_Idx, _Tp, _FirstExt, _Extents...> {
+  constexpr static _Tp get(size_t __r) noexcept {
+    if (__r == _Idx)
       return _FirstExt;
     else
-      return __static_array_impl<_R + 1, _T, _Extents...>::get(__r);
+      return __static_array_impl<_Idx + 1, _Tp, _Extents...>::get(__r);
   }
   template <size_t __r>
-  constexpr static _T get() {
-    if constexpr (__r == _R)
+  constexpr static _Tp get() {
+    if constexpr (__r == _Idx)
       return _FirstExt;
     else
-      return __static_array_impl<_R + 1, _T, _Extents...>::template get<__r>();
+      return __static_array_impl<_Idx + 1, _Tp, _Extents...>::template get<__r>();
   }
 };
 
 // End the recursion
-template <size_t _R, class _T, _T _FirstExt>
-struct __static_array_impl<_R, _T, _FirstExt> {
-  constexpr static _T get(size_t) noexcept { return _FirstExt; }
+template <size_t _Idx, class _Tp, _Tp _FirstExt>
+struct __static_array_impl<_Idx, _Tp, _FirstExt> {
+  constexpr static _Tp get(size_t) noexcept { return _FirstExt; }
   template <size_t>
-  constexpr static _T get() {
+  constexpr static _Tp get() {
     return _FirstExt;
   }
 };
 
 // Don't start recursion if size 0
-template <class _T>
-struct __static_array_impl<0, _T> {
-  constexpr static _T get(size_t) noexcept { return _T(); }
+template <class _Tp>
+struct __static_array_impl<0, _Tp> {
+  constexpr static _Tp get(size_t) noexcept { return _Tp(); }
   template <size_t>
-  constexpr static _T get() {
-    return _T();
+  constexpr static _Tp get() {
+    return _Tp();
   }
 };
 
 // Static array, provides get<r>(), get(r) and operator[r]
-template <class _T, _T... _Values>
-struct __static_array : public __static_array_impl<0, _T, _Values...> {
+template <class _Tp, _Tp... _Values>
+struct __static_array : public __static_array_impl<0, _Tp, _Values...> {
 public:
   constexpr static size_t size() { return sizeof...(_Values); }
 };
@@ -150,30 +150,30 @@ public:
 // index_sequence_scan takes compile time values and provides get(r)
 //  which return the sum of the first r-1 values.
 
-// _Recursive implementation for get
-template <size_t _R, size_t... _Values>
+// Recursive implementation for get
+template <size_t _Idx, size_t... _Values>
 struct __index_sequence_scan_impl;
 
-template <size_t _R, size_t _FirstVal, size_t... _Values>
-struct __index_sequence_scan_impl<_R, _FirstVal, _Values...> {
+template <size_t _Idx, size_t _FirstVal, size_t... _Values>
+struct __index_sequence_scan_impl<_Idx, _FirstVal, _Values...> {
   constexpr static size_t get(size_t __r) {
-    if (__r > _R)
-      return _FirstVal + __index_sequence_scan_impl<_R + 1, _Values...>::get(__r);
+    if (__r > _Idx)
+      return _FirstVal + __index_sequence_scan_impl<_Idx + 1, _Values...>::get(__r);
     else
       return 0;
   }
 };
 
-template <size_t _R, size_t _FirstVal>
-struct __index_sequence_scan_impl<_R, _FirstVal> {
+template <size_t _Idx, size_t _FirstVal>
+struct __index_sequence_scan_impl<_Idx, _FirstVal> {
 #  if defined(__NVCC__) || defined(__NVCOMPILER)
-  // NVCC warns about pointless comparison with 0 for _R==0 and r being const
+  // NVCC warns about pointless comparison with 0 for _Idx==0 and r being const
   // evaluatable and also 0.
   constexpr static size_t get(size_t __r) {
-    return static_cast<int64_t>(_R) > static_cast<int64_t>(__r) ? _FirstVal : 0;
+    return static_cast<int64_t>(_Idx) > static_cast<int64_t>(__r) ? _FirstVal : 0;
   }
 #  else
-  constexpr static size_t get(size_t __r) { return _R > __r ? _FirstVal : 0; }
+  constexpr static size_t get(size_t __r) { return _Idx > __r ? _FirstVal : 0; }
 #  endif
 };
 template <>
@@ -190,17 +190,17 @@ struct __index_sequence_scan_impl<0> {
 // This is needed to make the __maybe_static_array be truly empty, for
 // all static values.
 
-template <class _T, size_t _Num>
+template <class _Tp, size_t _Num>
 struct __possibly_empty_array {
-  _T __vals_[_Num];
-  constexpr _T& operator[](size_t __r) { return __vals_[__r]; }
-  constexpr const _T& operator[](size_t __r) const { return __vals_[__r]; }
+  _Tp __vals_[_Num];
+  constexpr _Tp& operator[](size_t __r) { return __vals_[__r]; }
+  constexpr const _Tp& operator[](size_t __r) const { return __vals_[__r]; }
 };
 
-template <class _T>
-struct __possibly_empty_array<_T, 0> {
-  constexpr _T operator[](size_t) { return _T(); }
-  constexpr const _T operator[](size_t) const { return _T(); }
+template <class _Tp>
+struct __possibly_empty_array<_Tp, 0> {
+  constexpr _Tp operator[](size_t) { return _Tp(); }
+  constexpr const _Tp operator[](size_t) const { return _Tp(); }
 };
 
 // ------------------------------------------------------------------
@@ -244,27 +244,27 @@ public:
     requires(sizeof...(_DynVals) == __size_dynamic_ && __size_dynamic_ > 0)
   constexpr __maybe_static_array(_DynVals... __vals) : __dyn_vals_{static_cast<_TDynamic>(__vals)...} {}
 
-  template <class _T, size_t _Num>
+  template <class _Tp, size_t _Num>
     requires(_Num == __size_dynamic_ && _Num > 0)
-  constexpr __maybe_static_array(const std::array<_T, _Num>& __vals) {
+  constexpr __maybe_static_array(const std::array<_Tp, _Num>& __vals) {
     for (size_t __r = 0; __r < _Num; __r++)
       __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
   }
 
-  template <class _T, size_t _Num>
+  template <class _Tp, size_t _Num>
     requires(_Num == __size_dynamic_ && _Num == 0)
-  constexpr __maybe_static_array(const std::array<_T, _Num>&) : __dyn_vals_{} {}
+  constexpr __maybe_static_array(const std::array<_Tp, _Num>&) : __dyn_vals_{} {}
 
-  template <class _T, size_t _Num >
+  template <class _Tp, size_t _Num >
     requires(_Num == __size_dynamic_ && _Num > 0)
-  constexpr __maybe_static_array(const std::span<_T, _Num>& __vals) {
+  constexpr __maybe_static_array(const std::span<_Tp, _Num>& __vals) {
     for (size_t __r = 0; __r < _Num; __r++)
       __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
   }
 
-  template <class _T, size_t _Num>
+  template <class _Tp, size_t _Num>
     requires(_Num == __size_dynamic_ && _Num == 0)
-  constexpr __maybe_static_array(const std::span<_T, _Num>&) : __dyn_vals_{} {}
+  constexpr __maybe_static_array(const std::span<_Tp, _Num>&) : __dyn_vals_{} {}
 
   // constructors from all values
   template <class... _DynVals>
@@ -284,9 +284,9 @@ public:
     }
   }
 
-  template <class _T, size_t _Num>
+  template <class _Tp, size_t _Num>
     requires(_Num != __size_dynamic_ && __size_dynamic_ > 0)
-  constexpr __maybe_static_array(const std::array<_T, _Num>& __vals) {
+  constexpr __maybe_static_array(const std::array<_Tp, _Num>& __vals) {
     static_assert((_Num == __size_), "Invalid number of values.");
     for (size_t __r = 0; __r < __size_; __r++) {
       _TStatic __static_val = __static_vals_t::get(__r);
@@ -300,9 +300,9 @@ public:
     }
   }
 
-  template <class _T, size_t _Num>
+  template <class _Tp, size_t _Num>
     requires(_Num != __size_dynamic_ && __size_dynamic_ > 0)
-  constexpr __maybe_static_array(const std::span<_T, _Num>& __vals) {
+  constexpr __maybe_static_array(const std::span<_Tp, _Num>& __vals) {
     static_assert((_Num == __size_) || (__size_ == dynamic_extent));
     for (size_t __r = 0; __r < __size_; __r++) {
       _TStatic __static_val = __static_vals_t::get(__r);
@@ -395,40 +395,40 @@ private:
   // With C++ 17 the first two variants could be collapsed using if constexpr
   // in which case you don't need all the requires clauses.
   // in C++ 14 mode that doesn't work due to infinite recursion
-  template <size_t _DynCount, size_t _R, class _OtherExtents, class... _DynamicValues>
-    requires((_R < __rank_) && (static_extent(_R) == dynamic_extent))
+  template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
+    requires((_Idx < __rank_) && (static_extent(_Idx) == dynamic_extent))
   __vals_t __construct_vals_from_extents(
       std::integral_constant<size_t, _DynCount>,
-      std::integral_constant<size_t, _R>,
+      std::integral_constant<size_t, _Idx>,
       const _OtherExtents& __exts,
       _DynamicValues... __dynamic_values) noexcept {
     return __construct_vals_from_extents(
         std::integral_constant<size_t, _DynCount + 1>(),
-        std::integral_constant<size_t, _R + 1>(),
+        std::integral_constant<size_t, _Idx + 1>(),
         __exts,
         __dynamic_values...,
-        __exts.extent(_R));
+        __exts.extent(_Idx));
   }
 
-  template <size_t _DynCount, size_t _R, class _OtherExtents, class... _DynamicValues>
-    requires((_R < __rank_) && (static_extent(_R) != dynamic_extent))
+  template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
+    requires((_Idx < __rank_) && (static_extent(_Idx) != dynamic_extent))
   __vals_t __construct_vals_from_extents(
       std::integral_constant<size_t, _DynCount>,
-      std::integral_constant<size_t, _R>,
+      std::integral_constant<size_t, _Idx>,
       const _OtherExtents& __exts,
       _DynamicValues... __dynamic_values) noexcept {
     return __construct_vals_from_extents(
         std::integral_constant<size_t, _DynCount>(),
-        std::integral_constant<size_t, _R + 1>(),
+        std::integral_constant<size_t, _Idx + 1>(),
         __exts,
         __dynamic_values...);
   }
 
-  template <size_t _DynCount, size_t _R, class _OtherExtents, class... _DynamicValues>
-    requires((_R == __rank_) && (_DynCount == __rank_dynamic_))
+  template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
+    requires((_Idx == __rank_) && (_DynCount == __rank_dynamic_))
   __vals_t __construct_vals_from_extents(
       std::integral_constant<size_t, _DynCount>,
-      std::integral_constant<size_t, _R>,
+      std::integral_constant<size_t, _Idx>,
       const _OtherExtents&,
       _DynamicValues... __dynamic_values) noexcept {
     return __vals_t{static_cast<index_type>(__dynamic_values)...};
@@ -468,7 +468,7 @@ public:
   }
 };
 
-// _Recursive helper classes to implement dextents alias for extents
+// Recursive helper classes to implement dextents alias for extents
 namespace __mdspan_detail {
 
 template <class _IndexType, size_t _Rank, class _Extents = extents<_IndexType>>
@@ -498,14 +498,14 @@ extents(_IndexTypes...) -> extents<size_t, size_t((_IndexTypes(), dynamic_extent
 // Helper type traits for identifying a class as extents.
 namespace __mdspan_detail {
 
-template <class _T>
+template <class _Tp>
 struct __is_extents : ::std::false_type {};
 
 template <class _IndexType, size_t... _ExtentsPack>
 struct __is_extents<extents<_IndexType, _ExtentsPack...>> : ::std::true_type {};
 
-template <class _T>
-inline constexpr bool __is_extents_v = __is_extents<_T>::value;
+template <class _Tp>
+inline constexpr bool __is_extents_v = __is_extents<_Tp>::value;
 
 } // namespace __mdspan_detail
 
