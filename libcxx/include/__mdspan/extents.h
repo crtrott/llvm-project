@@ -140,8 +140,6 @@ struct __static_array_impl<0, _T> {
 template <class _T, _T... _Values>
 struct __static_array : public __static_array_impl<0, _T, _Values...> {
 public:
-  using value_type = _T;
-
   constexpr static size_t size() { return sizeof...(_Values); }
 };
 
@@ -221,128 +219,111 @@ struct __maybe_static_array {
 private:
   // Static values member
   using __static_vals_t                    = __static_array<_TStatic, _Values...>;
-  constexpr static size_t m_size         = sizeof...(_Values);
-  constexpr static size_t m_size_dynamic = ((_Values == _DynTag) + ... + 0);
+  constexpr static size_t __size_         = sizeof...(_Values);
+  constexpr static size_t __size_dynamic_ = ((_Values == _DynTag) + ... + 0);
 
   // Dynamic values member
-  [[no_unique_address]] __possibly_empty_array<_TDynamic, m_size_dynamic> __dyn_vals_;
+  [[no_unique_address]] __possibly_empty_array<_TDynamic, __size_dynamic_> __dyn_vals_;
 
   // static mapping of indices to the position in the dynamic values array
   using __dyn_map_t = __index_sequence_scan_impl<0, static_cast<size_t>(_Values == _DynTag)...>;
 
 public:
-  // two types for static and dynamic values
-  using value_type        = _TDynamic;
-  using static_value_type = _TStatic;
-  // tag value indicating dynamic value
-  constexpr static static_value_type tag_value = _DynTag;
 
   constexpr __maybe_static_array() = default;
 
   // constructor for all static values
   // TODO: add precondition check?
   template <class... _Vals>
-    requires((m_size_dynamic == 0) && (sizeof...(_Vals) > 0))
+    requires((__size_dynamic_ == 0) && (sizeof...(_Vals) > 0))
   constexpr __maybe_static_array(_Vals...) : __dyn_vals_{} {}
 
   // constructors from dynamic values only
   template <class... _DynVals>
-    requires(sizeof...(_DynVals) == m_size_dynamic && m_size_dynamic > 0)
+    requires(sizeof...(_DynVals) == __size_dynamic_ && __size_dynamic_ > 0)
   constexpr __maybe_static_array(_DynVals... __vals) : __dyn_vals_{static_cast<_TDynamic>(__vals)...} {}
 
   template <class _T, size_t _Num>
-    requires(_Num == m_size_dynamic && _Num > 0)
+    requires(_Num == __size_dynamic_ && _Num > 0)
   constexpr __maybe_static_array(const std::array<_T, _Num>& __vals) {
     for (size_t __r = 0; __r < _Num; __r++)
       __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
   }
 
   template <class _T, size_t _Num>
-    requires(_Num == m_size_dynamic && _Num == 0)
+    requires(_Num == __size_dynamic_ && _Num == 0)
   constexpr __maybe_static_array(const std::array<_T, _Num>&) : __dyn_vals_{} {}
 
   template <class _T, size_t _Num >
-    requires(_Num == m_size_dynamic && _Num > 0)
+    requires(_Num == __size_dynamic_ && _Num > 0)
   constexpr __maybe_static_array(const std::span<_T, _Num>& __vals) {
     for (size_t __r = 0; __r < _Num; __r++)
       __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
   }
 
   template <class _T, size_t _Num>
-    requires(_Num == m_size_dynamic && _Num == 0)
+    requires(_Num == __size_dynamic_ && _Num == 0)
   constexpr __maybe_static_array(const std::span<_T, _Num>&) : __dyn_vals_{} {}
 
   // constructors from all values
   template <class... _DynVals>
-    requires(sizeof...(_DynVals) != m_size_dynamic && m_size_dynamic > 0)
+    requires(sizeof...(_DynVals) != __size_dynamic_ && __size_dynamic_ > 0)
   constexpr __maybe_static_array(_DynVals... __vals) {
-    static_assert((sizeof...(_DynVals) == m_size), "Invalid number of values.");
-    _TDynamic __values[m_size]{static_cast<_TDynamic>(__vals)...};
-    for (size_t __r = 0; __r < m_size; __r++) {
+    static_assert((sizeof...(_DynVals) == __size_), "Invalid number of values.");
+    _TDynamic __values[__size_]{static_cast<_TDynamic>(__vals)...};
+    for (size_t __r = 0; __r < __size_; __r++) {
       _TStatic __static_val = __static_vals_t::get(__r);
       if (__static_val == _DynTag) {
         __dyn_vals_[__dyn_map_t::get(__r)] = __values[__r];
       }
 // Precondition check
-#  ifdef _MDSPAN_DEBUG
-      else {
-        assert(__values[r] == static_cast<_TDynamic>(__static_val));
-      }
-#  endif
+      else
+        _LIBCPP_ASSERT(__values[__r] == static_cast<_TDynamic>(__static_val), "extents construction: mismatch of provided arguments with static extents.");
     }
   }
 
   template <class _T, size_t _Num>
-    requires(_Num != m_size_dynamic && m_size_dynamic > 0)
+    requires(_Num != __size_dynamic_ && __size_dynamic_ > 0)
   constexpr __maybe_static_array(const std::array<_T, _Num>& __vals) {
-    static_assert((_Num == m_size), "Invalid number of values.");
-// Precondition check
-#  ifdef _MDSPAN_DEBUG
-    assert(_Num == m_size);
-#  endif
-    for (size_t __r = 0; __r < m_size; __r++) {
+    static_assert((_Num == __size_), "Invalid number of values.");
+    for (size_t __r = 0; __r < __size_; __r++) {
       _TStatic __static_val = __static_vals_t::get(__r);
       if (__static_val == _DynTag) {
         __dyn_vals_[__dyn_map_t::get(__r)] = static_cast<_TDynamic>(__vals[__r]);
       }
 // Precondition check
-#  ifdef _MDSPAN_DEBUG
-      else {
-        assert(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val));
-      }
-#  endif
+      else
+       _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val),"extents construction: mismatch of provided arguments with static extents.");
     }
   }
 
   template <class _T, size_t _Num>
-    requires(_Num != m_size_dynamic && m_size_dynamic > 0)
+    requires(_Num != __size_dynamic_ && __size_dynamic_ > 0)
   constexpr __maybe_static_array(const std::span<_T, _Num>& __vals) {
-    static_assert((_Num == m_size) || (m_size == dynamic_extent));
-    for (size_t __r = 0; __r < m_size; __r++) {
+    static_assert((_Num == __size_) || (__size_ == dynamic_extent));
+    for (size_t __r = 0; __r < __size_; __r++) {
       _TStatic __static_val = __static_vals_t::get(__r);
       if (__static_val == _DynTag) {
         __dyn_vals_[__dyn_map_t::get(__r)] = static_cast<_TDynamic>(__vals[__r]);
       }
-#  ifdef _MDSPAN_DEBUG
-      else {
-        assert(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val));
-      }
-#  endif
+// Precondition check
+      else
+        _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val), "extents construction: mismatch of provided arguments with static extents.");
     }
   }
 
   // access functions
-  constexpr static _TStatic static_value(size_t __r) noexcept { return __static_vals_t::get(__r); }
+  constexpr static _TStatic __static_value(size_t __r) noexcept { return __static_vals_t::get(__r); }
 
-  constexpr _TDynamic value(size_t __r) const {
+  constexpr _TDynamic __value(size_t __r) const {
     _TStatic __static_val = __static_vals_t::get(__r);
     return __static_val == _DynTag ? __dyn_vals_[__dyn_map_t::get(__r)] : static_cast<_TDynamic>(__static_val);
   }
-  constexpr _TDynamic operator[](size_t __r) const { return value(__r); }
+  constexpr _TDynamic operator[](size_t __r) const { return __value(__r); }
 
   // observers
-  constexpr static size_t size() { return m_size; }
-  constexpr static size_t size_dynamic() { return m_size_dynamic; }
+  constexpr static size_t __size() { return __size_; }
+  constexpr static size_t __size_dynamic() { return __size_dynamic_; }
 };
 
 } // namespace __mdspan_detail
@@ -367,20 +348,20 @@ public:
                 "extents::index_type must be a signed or unsigned integer type");
 
 private:
-  constexpr static rank_type m_rank         = sizeof...(_Extents);
-  constexpr static rank_type m_rank_dynamic = ((_Extents == dynamic_extent) + ... + 0);
+  constexpr static rank_type __rank_         = sizeof...(_Extents);
+  constexpr static rank_type __rank_dynamic_ = ((_Extents == dynamic_extent) + ... + 0);
 
   // internal storage type using __maybe_static_array
-  using vals_t = __mdspan_detail::__maybe_static_array<_IndexType, size_t, dynamic_extent, _Extents...>;
-  [[no_unique_address]] vals_t m_vals;
+  using __vals_t = __mdspan_detail::__maybe_static_array<_IndexType, size_t, dynamic_extent, _Extents...>;
+  [[no_unique_address]] __vals_t __vals_;
 
 public:
   // [mdspan.extents.obs], observers of multidimensional index space
-  constexpr static rank_type rank() noexcept { return m_rank; }
-  constexpr static rank_type rank_dynamic() noexcept { return m_rank_dynamic; }
+  constexpr static rank_type rank() noexcept { return __rank_; }
+  constexpr static rank_type rank_dynamic() noexcept { return __rank_dynamic_; }
 
-  constexpr index_type extent(rank_type r) const noexcept { return m_vals.value(r); }
-  constexpr static size_t static_extent(rank_type r) noexcept { return vals_t::static_value(r); }
+  constexpr index_type extent(rank_type r) const noexcept { return __vals_.__value(r); }
+  constexpr static size_t static_extent(rank_type r) noexcept { return __vals_t::__static_value(r); }
 
   // [mdspan.extents.cons], constructors
   constexpr extents() noexcept = default;
@@ -390,20 +371,20 @@ public:
   template <class... _OtherIndexTypes>
     requires((is_convertible_v<_OtherIndexTypes, index_type> && ...) &&
              (is_nothrow_constructible_v<index_type, _OtherIndexTypes> && ...) &&
-             (sizeof...(_OtherIndexTypes) == m_rank || sizeof...(_OtherIndexTypes) == m_rank_dynamic))
-  constexpr explicit extents(_OtherIndexTypes... __dynvals) noexcept : m_vals(static_cast<index_type>(__dynvals)...) {}
+             (sizeof...(_OtherIndexTypes) == __rank_ || sizeof...(_OtherIndexTypes) == __rank_dynamic_))
+  constexpr explicit extents(_OtherIndexTypes... __dynvals) noexcept : __vals_(static_cast<index_type>(__dynvals)...) {}
 
   template <class _OtherIndexType, size_t _Num>
     requires(is_convertible_v<_OtherIndexType, index_type>&& is_nothrow_constructible_v<index_type, _OtherIndexType> &&
-             (_Num == m_rank || _Num == m_rank_dynamic))
-  explicit(_Num != m_rank_dynamic) constexpr extents(const array<_OtherIndexType, _Num>& exts) noexcept
-      : m_vals(std::move(exts)) {}
+             (_Num == __rank_ || _Num == __rank_dynamic_))
+  explicit(_Num != __rank_dynamic_) constexpr extents(const array<_OtherIndexType, _Num>& __exts) noexcept
+      : __vals_(std::move(__exts)) {}
 
   template <class _OtherIndexType, size_t _Num>
     requires(is_convertible_v<_OtherIndexType, index_type>&& is_nothrow_constructible_v<index_type, _OtherIndexType> &&
-             (_Num == m_rank || _Num == m_rank_dynamic))
-  explicit(_Num != m_rank_dynamic) constexpr extents(const span<_OtherIndexType, _Num>& exts) noexcept
-      : m_vals(std::move(exts)) {}
+             (_Num == __rank_ || _Num == __rank_dynamic_))
+  explicit(_Num != __rank_dynamic_) constexpr extents(const span<_OtherIndexType, _Num>& __exts) noexcept
+      : __vals_(std::move(__exts)) {}
 
 private:
   // Function to construct extents storage from other extents.
@@ -411,41 +392,41 @@ private:
   // in which case you don't need all the requires clauses.
   // in C++ 14 mode that doesn't work due to infinite recursion
   template <size_t _DynCount, size_t _R, class _OtherExtents, class... _DynamicValues>
-    requires((_R < m_rank) && (static_extent(_R) == dynamic_extent))
-  vals_t __construct_vals_from_extents(
+    requires((_R < __rank_) && (static_extent(_R) == dynamic_extent))
+  __vals_t __construct_vals_from_extents(
       std::integral_constant<size_t, _DynCount>,
       std::integral_constant<size_t, _R>,
-      const _OtherExtents& exts,
-      _DynamicValues... dynamic_values)
+      const _OtherExtents& __exts,
+      _DynamicValues... __dynamic_values)
   noexcept {
     return __construct_vals_from_extents(
         std::integral_constant<size_t, _DynCount + 1>(),
         std::integral_constant<size_t, _R + 1>(),
-        exts,
-        dynamic_values...,
-        exts.extent(_R));
+        __exts,
+        __dynamic_values...,
+        __exts.extent(_R));
   }
 
   template <size_t _DynCount, size_t _R, class _OtherExtents, class... _DynamicValues>
-    requires((_R < m_rank) && (static_extent(_R) != dynamic_extent))
-  vals_t __construct_vals_from_extents(
+    requires((_R < __rank_) && (static_extent(_R) != dynamic_extent))
+  __vals_t __construct_vals_from_extents(
       std::integral_constant<size_t, _DynCount>,
       std::integral_constant<size_t, _R>,
-      const _OtherExtents& exts,
-      _DynamicValues... dynamic_values)
+      const _OtherExtents& __exts,
+      _DynamicValues... __dynamic_values)
   noexcept {
     return __construct_vals_from_extents(
-        std::integral_constant<size_t, _DynCount>(), std::integral_constant<size_t, _R + 1>(), exts, dynamic_values...);
+        std::integral_constant<size_t, _DynCount>(), std::integral_constant<size_t, _R + 1>(), __exts, __dynamic_values...);
   }
 
   template <size_t _DynCount, size_t _R, class _OtherExtents, class... _DynamicValues>
-    requires((_R == m_rank) && (_DynCount == m_rank_dynamic))
-  vals_t __construct_vals_from_extents(
+    requires((_R == __rank_) && (_DynCount == __rank_dynamic_))
+  __vals_t __construct_vals_from_extents(
       std::integral_constant<size_t, _DynCount>,
       std::integral_constant<size_t, _R>,
       const _OtherExtents&,
-      _DynamicValues... dynamic_values)
-  noexcept { return vals_t{static_cast<index_type>(dynamic_values)...}; }
+      _DynamicValues... __dynamic_values)
+  noexcept { return __vals_t{static_cast<index_type>(__dynamic_values)...}; }
 
 public:
   // Converting constructor from other extents specializations
@@ -456,26 +437,26 @@ public:
       (((_Extents != dynamic_extent) && (_OtherExtents == dynamic_extent)) || ...) ||
       (std::numeric_limits<index_type>::max() <
        std::numeric_limits<_OtherIndexType>::max())) constexpr extents(const extents<_OtherIndexType, _OtherExtents...>&
-                                                                          other) noexcept
-      : m_vals(__construct_vals_from_extents(
-            std::integral_constant<size_t, 0>(), std::integral_constant<size_t, 0>(), other)) {}
+                                                                          __other) noexcept
+      : __vals_(__construct_vals_from_extents(
+            std::integral_constant<size_t, 0>(), std::integral_constant<size_t, 0>(), __other)) {}
 
   // Comparison operator
   template <class _OtherIndexType, size_t... _OtherExtents>
-  friend constexpr bool operator==(const extents& lhs, const extents<_OtherIndexType, _OtherExtents...>& rhs) noexcept {
-    bool value = true;
+  friend constexpr bool operator==(const extents& __lhs, const extents<_OtherIndexType, _OtherExtents...>& __rhs) noexcept {
+    bool __value = true;
     if constexpr (rank() != sizeof...(_OtherExtents)) {
-      value = false;
+      __value = false;
     } else {
-      for (size_type r = 0; r < m_rank; r++)
-        value &= static_cast<index_type>(rhs.extent(r)) == lhs.extent(r);
+      for (size_type r = 0; r < __rank_; r++)
+        __value &= static_cast<index_type>(__rhs.extent(r)) == __lhs.extent(r);
     }
-    return value;
+    return __value;
   }
 
   template <class _OtherIndexType, size_t... _OtherExtents>
-  friend constexpr bool operator!=(extents const& lhs, extents<_OtherIndexType, _OtherExtents...> const& rhs) noexcept {
-    return !(lhs == rhs);
+  friend constexpr bool operator!=(extents const& __lhs, extents<_OtherIndexType, _OtherExtents...> const& __rhs) noexcept {
+    return !(__lhs == __rhs);
   }
 };
 
