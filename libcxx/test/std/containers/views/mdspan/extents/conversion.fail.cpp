@@ -1,0 +1,81 @@
+#include <mdspan>
+#include <type_traits>
+#include <concepts>
+#include <cassert>
+
+#include "test_macros.h"
+
+// std::extents can be converted into each other as long as there aren't any
+// mismatched static extents.
+// Convertibility requires that no runtime dimension is assigned to a static dimension,
+// and that the destinations index_type has a larger or equal max value than the
+// sources index_type
+
+// clang-format off
+void test_no_implicit_conversion() {
+  constexpr size_t D = std::dynamic_extent;
+  {
+    std::extents<int, D> from;
+    std::extents<int, 5> to;
+    to = from; // expected-error {{no viable overloaded '='}}
+  }
+  {
+    std::extents<int, D, 7> from;
+    std::extents<int, 5, 7> to;
+    to = from; // expected-error {{no viable overloaded '='}}
+  }
+  {
+    std::extents<size_t, D> from;
+    std::extents<int, D> to;
+    to = from; // expected-error {{no viable overloaded '='}}
+  }
+  {
+    std::extents<size_t, 5> from;
+    std::extents<int, 5> to;
+    to = from; // expected-error {{no viable overloaded '='}}
+  }
+}
+
+void test_rank_mismatch() {
+  constexpr size_t D = std::dynamic_extent;
+  {
+    std::extents<int> from;
+    std::extents<int, D> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D>'}}
+    (void) to;
+  }
+  {
+    std::extents<int, D, D> from;
+    std::extents<int> to0(from); // expected-error {{no matching constructor for initialization of 'std::extents<int>'}}
+    std::extents<int, D> to1(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D>'}}
+    std::extents<int, D, D, D> to3(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D, D, D>'}}
+    (void) to0;
+    (void) to1;
+    (void) to3;
+  }
+}
+
+void test_static_extent_mismatch() {
+  constexpr size_t D = std::dynamic_extent;
+  {
+    std::extents<int, 3> from;
+    std::extents<int, 2> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, 2>'}}
+    (void) to;
+  }
+  {
+    std::extents<int, 3, D> from;
+    std::extents<int, 2, D> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, 2, D>'}}
+    (void) to;
+  }
+  {
+    std::extents<int, D, 2> from;
+    std::extents<int, D, 3> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D, 3>'}}
+    (void) to;
+  }
+}
+// clang-format on
+
+int main() {
+  test_rank_mismatch();
+  test_static_extent_mismatch();
+  test_no_implicit_conversion();
+}
