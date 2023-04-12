@@ -184,3 +184,12 @@ D: Linux fixes.
 N: Zhihao Yuan
 E: lichray@gmail.com
 D: Standard compatibility fixes.
+
+N: Damien Lebrun-Grandie
+E: dalg24@gmail.com
+E: lebrungrandt@ornl.gov
+D: Implementation of mdspan.
+
+N: Christian Trott
+E: crtrott@sandia.gov
+D: Implementation of mdspan.
