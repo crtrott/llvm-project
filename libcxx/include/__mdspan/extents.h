@@ -56,7 +56,7 @@ namespace std {
 
     // [mdspan.extents.expo], exposition-only helpers
     constexpr size_t fwd-prod-of-extents(rank_type) const noexcept;     // exposition only
-    constexpr size_t rev-prod-of-extents(rank_type) const noexcept;     // exposition only
+    constexpr size_t __rev-prod-of-extents(rank_type) const noexcept;     // exposition only
     template<class _OtherIndexType>
       static constexpr auto index-cast(_OtherIndexType&&) noexcept;      // exposition only
 
@@ -101,18 +101,18 @@ struct __static_array_impl;
 
 template <size_t _R, class _T, _T _FirstExt, _T... _Extents>
 struct __static_array_impl<_R, _T, _FirstExt, _Extents...> {
-  constexpr static _T get(size_t r) noexcept {
-    if (r == _R)
+  constexpr static _T get(size_t __r) noexcept {
+    if (__r == _R)
       return _FirstExt;
     else
-      return __static_array_impl<_R + 1, _T, _Extents...>::get(r);
+      return __static_array_impl<_R + 1, _T, _Extents...>::get(__r);
   }
-  template <size_t r>
+  template <size_t __r>
   constexpr static _T get() {
-    if constexpr (r == _R)
+    if constexpr (__r == _R)
       return _FirstExt;
     else
-      return __static_array_impl<_R + 1, _T, _Extents...>::template get<r>();
+      return __static_array_impl<_R + 1, _T, _Extents...>::template get<__r>();
   }
 };
 
@@ -158,9 +158,9 @@ struct __index_sequence_scan_impl;
 
 template <size_t _R, size_t _FirstVal, size_t... _Values>
 struct __index_sequence_scan_impl<_R, _FirstVal, _Values...> {
-  constexpr static size_t get(size_t r) {
-    if (r > _R)
-      return _FirstVal + __index_sequence_scan_impl<_R + 1, _Values...>::get(r);
+  constexpr static size_t get(size_t __r) {
+    if (__r > _R)
+      return _FirstVal + __index_sequence_scan_impl<_R + 1, _Values...>::get(__r);
     else
       return 0;
   }
@@ -171,9 +171,9 @@ struct __index_sequence_scan_impl<_R, _FirstVal> {
 #  if defined(__NVCC__) || defined(__NVCOMPILER)
   // NVCC warns about pointless comparison with 0 for _R==0 and r being const
   // evaluatable and also 0.
-  constexpr static size_t get(size_t r) { return static_cast<int64_t>(_R) > static_cast<int64_t>(r) ? _FirstVal : 0; }
+  constexpr static size_t get(size_t __r) { return static_cast<int64_t>(_R) > static_cast<int64_t>(__r) ? _FirstVal : 0; }
 #  else
-  constexpr static size_t get(size_t r) { return _R > r ? _FirstVal : 0; }
+  constexpr static size_t get(size_t __r) { return _R > __r ? _FirstVal : 0; }
 #  endif
 };
 template <>
@@ -192,9 +192,9 @@ struct __index_sequence_scan_impl<0> {
 
 template <class _T, size_t _Num>
 struct __possibly_empty_array {
-  _T vals[_Num];
-  constexpr _T& operator[](size_t r) { return vals[r]; }
-  constexpr const _T& operator[](size_t r) const { return vals[r]; }
+  _T __vals_[_Num];
+  constexpr _T& operator[](size_t __r) { return __vals_[__r]; }
+  constexpr const _T& operator[](size_t __r) const { return __vals_[__r]; }
 };
 
 template <class _T>
@@ -211,7 +211,7 @@ struct __possibly_empty_array<_T, 0> {
 // only stores the runtime values.
 // The type of the static and the runtime values can be different.
 // The position of a dynamic value is indicated through a tag value.
-template <class _TDynamic, class _TStatic, _TStatic dyn_tag, _TStatic... _Values>
+template <class _TDynamic, class _TStatic, _TStatic _DynTag, _TStatic... _Values>
 struct __maybe_static_array {
   static_assert(is_convertible<_TStatic, _TDynamic>::value,
                 "__maybe_static_array: _TStatic must be convertible to _TDynamic");
@@ -220,22 +220,22 @@ struct __maybe_static_array {
 
 private:
   // Static values member
-  using static_vals_t                    = __static_array<_TStatic, _Values...>;
+  using __static_vals_t                    = __static_array<_TStatic, _Values...>;
   constexpr static size_t m_size         = sizeof...(_Values);
-  constexpr static size_t m_size_dynamic = ((_Values == dyn_tag) + ... + 0);
+  constexpr static size_t m_size_dynamic = ((_Values == _DynTag) + ... + 0);
 
   // Dynamic values member
-  [[no_unique_address]] __possibly_empty_array<_TDynamic, m_size_dynamic> m_dyn_vals;
+  [[no_unique_address]] __possibly_empty_array<_TDynamic, m_size_dynamic> __dyn_vals_;
 
   // static mapping of indices to the position in the dynamic values array
-  using dyn_map_t = __index_sequence_scan_impl<0, static_cast<size_t>(_Values == dyn_tag)...>;
+  using __dyn_map_t = __index_sequence_scan_impl<0, static_cast<size_t>(_Values == _DynTag)...>;
 
 public:
   // two types for static and dynamic values
   using value_type        = _TDynamic;
   using static_value_type = _TStatic;
   // tag value indicating dynamic value
-  constexpr static static_value_type tag_value = dyn_tag;
+  constexpr static static_value_type tag_value = _DynTag;
 
   constexpr __maybe_static_array() = default;
 
@@ -243,50 +243,50 @@ public:
   // TODO: add precondition check?
   template <class... _Vals>
     requires((m_size_dynamic == 0) && (sizeof...(_Vals) > 0))
-  constexpr __maybe_static_array(_Vals...) : m_dyn_vals{} {}
+  constexpr __maybe_static_array(_Vals...) : __dyn_vals_{} {}
 
   // constructors from dynamic values only
   template <class... _DynVals>
     requires(sizeof...(_DynVals) == m_size_dynamic && m_size_dynamic > 0)
-  constexpr __maybe_static_array(_DynVals... vals) : m_dyn_vals{static_cast<_TDynamic>(vals)...} {}
+  constexpr __maybe_static_array(_DynVals... __vals) : __dyn_vals_{static_cast<_TDynamic>(__vals)...} {}
 
   template <class _T, size_t _Num>
     requires(_Num == m_size_dynamic && _Num > 0)
-  constexpr __maybe_static_array(const std::array<_T, _Num>& vals) {
-    for (size_t r = 0; r < _Num; r++)
-      m_dyn_vals[r] = static_cast<_TDynamic>(vals[r]);
+  constexpr __maybe_static_array(const std::array<_T, _Num>& __vals) {
+    for (size_t __r = 0; __r < _Num; __r++)
+      __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
   }
 
   template <class _T, size_t _Num>
     requires(_Num == m_size_dynamic && _Num == 0)
-  constexpr __maybe_static_array(const std::array<_T, _Num>&) : m_dyn_vals{} {}
+  constexpr __maybe_static_array(const std::array<_T, _Num>&) : __dyn_vals_{} {}
 
   template <class _T, size_t _Num >
     requires(_Num == m_size_dynamic && _Num > 0)
-  constexpr __maybe_static_array(const std::span<_T, _Num>& vals) {
-    for (size_t r = 0; r < _Num; r++)
-      m_dyn_vals[r] = static_cast<_TDynamic>(vals[r]);
+  constexpr __maybe_static_array(const std::span<_T, _Num>& __vals) {
+    for (size_t __r = 0; __r < _Num; __r++)
+      __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
   }
 
   template <class _T, size_t _Num>
     requires(_Num == m_size_dynamic && _Num == 0)
-  constexpr __maybe_static_array(const std::span<_T, _Num>&) : m_dyn_vals{} {}
+  constexpr __maybe_static_array(const std::span<_T, _Num>&) : __dyn_vals_{} {}
 
   // constructors from all values
   template <class... _DynVals>
     requires(sizeof...(_DynVals) != m_size_dynamic && m_size_dynamic > 0)
-  constexpr __maybe_static_array(_DynVals... vals) {
+  constexpr __maybe_static_array(_DynVals... __vals) {
     static_assert((sizeof...(_DynVals) == m_size), "Invalid number of values.");
-    _TDynamic values[m_size]{static_cast<_TDynamic>(vals)...};
-    for (size_t r = 0; r < m_size; r++) {
-      _TStatic static_val = static_vals_t::get(r);
-      if (static_val == dyn_tag) {
-        m_dyn_vals[dyn_map_t::get(r)] = values[r];
+    _TDynamic __values[m_size]{static_cast<_TDynamic>(__vals)...};
+    for (size_t __r = 0; __r < m_size; __r++) {
+      _TStatic __static_val = __static_vals_t::get(__r);
+      if (__static_val == _DynTag) {
+        __dyn_vals_[__dyn_map_t::get(__r)] = __values[__r];
       }
 // Precondition check
 #  ifdef _MDSPAN_DEBUG
       else {
-        assert(values[r] == static_cast<_TDynamic>(static_val));
+        assert(__values[r] == static_cast<_TDynamic>(__static_val));
       }
 #  endif
     }
@@ -294,21 +294,21 @@ public:
 
   template <class _T, size_t _Num>
     requires(_Num != m_size_dynamic && m_size_dynamic > 0)
-  constexpr __maybe_static_array(const std::array<_T, _Num>& vals) {
+  constexpr __maybe_static_array(const std::array<_T, _Num>& __vals) {
     static_assert((_Num == m_size), "Invalid number of values.");
 // Precondition check
 #  ifdef _MDSPAN_DEBUG
     assert(_Num == m_size);
 #  endif
-    for (size_t r = 0; r < m_size; r++) {
-      _TStatic static_val = static_vals_t::get(r);
-      if (static_val == dyn_tag) {
-        m_dyn_vals[dyn_map_t::get(r)] = static_cast<_TDynamic>(vals[r]);
+    for (size_t __r = 0; __r < m_size; __r++) {
+      _TStatic __static_val = __static_vals_t::get(__r);
+      if (__static_val == _DynTag) {
+        __dyn_vals_[__dyn_map_t::get(__r)] = static_cast<_TDynamic>(__vals[__r]);
       }
 // Precondition check
 #  ifdef _MDSPAN_DEBUG
       else {
-        assert(static_cast<_TDynamic>(vals[r]) == static_cast<_TDynamic>(static_val));
+        assert(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val));
       }
 #  endif
     }
@@ -316,29 +316,29 @@ public:
 
   template <class _T, size_t _Num>
     requires(_Num != m_size_dynamic && m_size_dynamic > 0)
-  constexpr __maybe_static_array(const std::span<_T, _Num>& vals) {
+  constexpr __maybe_static_array(const std::span<_T, _Num>& __vals) {
     static_assert((_Num == m_size) || (m_size == dynamic_extent));
-    for (size_t r = 0; r < m_size; r++) {
-      _TStatic static_val = static_vals_t::get(r);
-      if (static_val == dyn_tag) {
-        m_dyn_vals[dyn_map_t::get(r)] = static_cast<_TDynamic>(vals[r]);
+    for (size_t __r = 0; __r < m_size; __r++) {
+      _TStatic __static_val = __static_vals_t::get(__r);
+      if (__static_val == _DynTag) {
+        __dyn_vals_[__dyn_map_t::get(__r)] = static_cast<_TDynamic>(__vals[__r]);
       }
 #  ifdef _MDSPAN_DEBUG
       else {
-        assert(static_cast<_TDynamic>(vals[r]) == static_cast<_TDynamic>(static_val));
+        assert(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val));
       }
 #  endif
     }
   }
 
   // access functions
-  constexpr static _TStatic static_value(size_t r) noexcept { return static_vals_t::get(r); }
+  constexpr static _TStatic static_value(size_t __r) noexcept { return __static_vals_t::get(__r); }
 
-  constexpr _TDynamic value(size_t r) const {
-    _TStatic static_val = static_vals_t::get(r);
-    return static_val == dyn_tag ? m_dyn_vals[dyn_map_t::get(r)] : static_cast<_TDynamic>(static_val);
+  constexpr _TDynamic value(size_t __r) const {
+    _TStatic __static_val = __static_vals_t::get(__r);
+    return __static_val == _DynTag ? __dyn_vals_[__dyn_map_t::get(__r)] : static_cast<_TDynamic>(__static_val);
   }
-  constexpr _TDynamic operator[](size_t r) const { return value(r); }
+  constexpr _TDynamic operator[](size_t __r) const { return value(__r); }
 
   // observers
   constexpr static size_t size() { return m_size; }
@@ -391,7 +391,7 @@ public:
     requires((is_convertible_v<_OtherIndexTypes, index_type> && ...) &&
              (is_nothrow_constructible_v<index_type, _OtherIndexTypes> && ...) &&
              (sizeof...(_OtherIndexTypes) == m_rank || sizeof...(_OtherIndexTypes) == m_rank_dynamic))
-  constexpr explicit extents(_OtherIndexTypes... dynvals) noexcept : m_vals(static_cast<index_type>(dynvals)...) {}
+  constexpr explicit extents(_OtherIndexTypes... __dynvals) noexcept : m_vals(static_cast<index_type>(__dynvals)...) {}
 
   template <class _OtherIndexType, size_t _Num>
     requires(is_convertible_v<_OtherIndexType, index_type>&& is_nothrow_constructible_v<index_type, _OtherIndexType> &&
