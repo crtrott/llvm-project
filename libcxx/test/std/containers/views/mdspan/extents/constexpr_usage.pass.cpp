@@ -36,6 +36,8 @@
 #include <type_traits>
 #include <concepts>
 #include <cassert>
+#include <array>
+#include <span>
 
 #include "ConvertibleToIntegral.h"
 #include "test_macros.h"

@@ -72,10 +72,16 @@ namespace std {
 }
 */
 
-#include <array>
+#include <__assert>
+#include <__config>
+#include <__fwd/array.h>
+#include <__fwd/span.h>
+#include <__type_traits/is_convertible.h>
+#include <__type_traits/is_nothrow_constructible.h>
+#include <__type_traits/make_unsigned.h>
+#include <__utility/move.h>
 #include <cinttypes>
 #include <limits>
-#include <span>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
