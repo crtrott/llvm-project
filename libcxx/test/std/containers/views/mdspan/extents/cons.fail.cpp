@@ -34,6 +34,8 @@
 
 #include <mdspan>
 #include <cassert>
+#include <array>
+#include <span>
 
 #include "ConvertibleToIntegral.h"
 #include "test_macros.h"

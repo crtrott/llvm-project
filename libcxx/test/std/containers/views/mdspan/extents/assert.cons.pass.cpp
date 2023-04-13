@@ -32,6 +32,8 @@
 
 #include <mdspan>
 #include <cassert>
+#include <array>
+#include <span>
 
 #include "check_assertion.h"
 
