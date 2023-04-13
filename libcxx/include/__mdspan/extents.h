@@ -458,7 +458,7 @@ public:
 
   // Comparison operator
   template <class _OtherIndexType, size_t... _OtherExtents>
-  friend constexpr bool
+  _LIBCPP_HIDE_FROM_ABI friend constexpr bool
   operator==(const extents& __lhs, const extents<_OtherIndexType, _OtherExtents...>& __rhs) noexcept {
     bool __value = true;
     if constexpr (rank() != sizeof...(_OtherExtents)) {
@@ -471,7 +471,7 @@ public:
   }
 
   template <class _OtherIndexType, size_t... _OtherExtents>
-  friend constexpr bool
+  _LIBCPP_HIDE_FROM_ABI friend constexpr bool
   operator!=(extents const& __lhs, extents<_OtherIndexType, _OtherExtents...> const& __rhs) noexcept {
     return !(__lhs == __rhs);
   }
