@@ -1121,8 +1121,6 @@ module std [system] {
   }
   module mdspan {
     header "mdspan"
-    export array
-    export span
     export *
 
     module __mdspan {
