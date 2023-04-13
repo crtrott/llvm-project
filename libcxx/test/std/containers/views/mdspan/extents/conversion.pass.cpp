@@ -48,8 +48,9 @@ void test_conversion(From src) {
 
 template <class T1, class T2>
 void test_conversion() {
-  constexpr size_t D             = std::dynamic_extent;
-  constexpr bool idx_convertible = std::numeric_limits<T1>::max() >= std::numeric_limits<T2>::max();
+  constexpr size_t D = std::dynamic_extent;
+  constexpr bool idx_convertible =
+      static_cast<size_t>(std::numeric_limits<T1>::max()) >= static_cast<size_t>(std::numeric_limits<T2>::max());
 
   // clang-format off
   test_conversion<idx_convertible && true,  std::extents<T1>>(std::extents<T2>());

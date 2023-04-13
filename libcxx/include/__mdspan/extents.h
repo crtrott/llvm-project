@@ -441,8 +441,9 @@ public:
              ((_OtherExtents == dynamic_extent || _Extents == dynamic_extent || _OtherExtents == _Extents) && ...))
   explicit(
       (((_Extents != dynamic_extent) && (_OtherExtents == dynamic_extent)) || ...) ||
-      (std::numeric_limits<index_type>::max() <
-       std::numeric_limits<_OtherIndexType>::max())) constexpr extents(const extents<_OtherIndexType, _OtherExtents...>&
+      (static_cast<make_unsigned_t<index_type>>(numeric_limits<index_type>::max()) <
+       static_cast<make_unsigned_t<_OtherIndexType>>(
+           numeric_limits<_OtherIndexType>::max()))) constexpr extents(const extents<_OtherIndexType, _OtherExtents...>&
                                                                            __other) noexcept
       : __vals_(__construct_vals_from_extents(
             std::integral_constant<size_t, 0>(), std::integral_constant<size_t, 0>(), __other)) {}
