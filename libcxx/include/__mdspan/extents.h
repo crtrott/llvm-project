@@ -75,7 +75,6 @@ namespace std {
 #include <__assert>
 #include <__config>
 #include <__fwd/array.h>
-#include <__fwd/span.h>
 #include <__type_traits/is_convertible.h>
 #include <__type_traits/is_nothrow_constructible.h>
 #include <__type_traits/is_same.h>
@@ -84,6 +83,7 @@ namespace std {
 #include <cinttypes>
 #include <cstddef>
 #include <limits>
+#include <span>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -372,8 +372,8 @@ public:
   constexpr static rank_type rank() noexcept { return __rank_; }
   constexpr static rank_type rank_dynamic() noexcept { return __rank_dynamic_; }
 
-  constexpr index_type extent(rank_type r) const noexcept { return __vals_.__value(r); }
-  constexpr static size_t static_extent(rank_type r) noexcept { return __vals_t::__static_value(r); }
+  constexpr index_type extent(rank_type __r) const noexcept { return __vals_.__value(__r); }
+  constexpr static size_t static_extent(rank_type __r) noexcept { return __vals_t::__static_value(__r); }
 
   // [mdspan.extents.cons], constructors
   constexpr extents() noexcept = default;
@@ -464,8 +464,8 @@ public:
     if constexpr (rank() != sizeof...(_OtherExtents)) {
       __value = false;
     } else {
-      for (size_type r = 0; r < __rank_; r++)
-        __value &= static_cast<index_type>(__rhs.extent(r)) == __lhs.extent(r);
+      for (rank_type __r = 0; __r < __rank_; __r++)
+        __value &= static_cast<index_type>(__rhs.extent(__r)) == __lhs.extent(__r);
     }
     return __value;
   }
