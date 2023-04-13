@@ -1130,7 +1130,7 @@ module std [system] {
   }
   module mdspan {
     header "mdspan"
-    export "span"
+    export span
     export *
 
     module __mdspan {
