@@ -21,6 +21,7 @@
 #include <type_traits>
 #include <concepts>
 #include <cassert>
+#include <limits>
 
 #include "test_macros.h"
 

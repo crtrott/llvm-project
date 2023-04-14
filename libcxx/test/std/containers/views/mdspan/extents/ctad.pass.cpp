@@ -28,11 +28,11 @@ void test(E e, Expected expected) {
 }
 
 int main() {
-  constexpr size_t D = std::dynamic_extent;
+  constexpr std::size_t D = std::dynamic_extent;
 
   test(std::extents(), std::extents<size_t>());
-  test(std::extents(1), std::extents<size_t, D>(1));
-  test(std::extents(1, 2u), std::extents<size_t, D, D>(1, 2u));
+  test(std::extents(1), std::extents<std::size_t, D>(1));
+  test(std::extents(1, 2u), std::extents<std::size_t, D, D>(1, 2u));
   test(std::extents(1, 2u, 3, 4, 5, 6, 7, 8, 9),
-       std::extents<size_t, D, D, D, D, D, D, D, D, D>(1, 2u, 3, 4, 5, 6, 7, 8, 9));
+       std::extents<std::size_t, D, D, D, D, D, D, D, D, D>(1, 2u, 3, 4, 5, 6, 7, 8, 9));
 }
