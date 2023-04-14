@@ -361,6 +361,10 @@ map optional
 map stdexcept
 map tuple
 map version
+mdspan cinttypes
+mdspan cstddef
+mdspan limits
+mdspan span
 memory compare
 memory cstddef
 memory cstdint
