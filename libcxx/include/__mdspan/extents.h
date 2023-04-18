@@ -278,7 +278,7 @@ public:
   // constructors from all values
   template <class... _DynVals>
     requires(sizeof...(_DynVals) != __size_dynamic_ && __size_dynamic_ > 0)
-  constexpr __maybe_static_array(_DynVals... __vals) {
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(_DynVals... __vals) {
     static_assert((sizeof...(_DynVals) == __size_), "Invalid number of values.");
     _TDynamic __values[__size_]{static_cast<_TDynamic>(__vals)...};
     for (size_t __r = 0; __r < __size_; __r++) {
@@ -295,7 +295,7 @@ public:
 
   template <class _Tp, size_t _Num>
     requires(_Num != __size_dynamic_ && __size_dynamic_ > 0)
-  constexpr __maybe_static_array(const std::array<_Tp, _Num>& __vals) {
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const std::array<_Tp, _Num>& __vals) {
     static_assert((_Num == __size_), "Invalid number of values.");
     for (size_t __r = 0; __r < __size_; __r++) {
       _TStatic __static_val = __static_vals_t::get(__r);
