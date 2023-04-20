@@ -109,7 +109,7 @@ struct __static_array_impl;
 
 template <size_t _Idx, class _Tp, _Tp _FirstExt, _Tp... _Extents>
 struct __static_array_impl<_Idx, _Tp, _FirstExt, _Extents...> {
-  constexpr static _Tp get(size_t __r) noexcept {
+  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get(size_t __r) noexcept {
     if (__r == _Idx)
       return _FirstExt;
     else
@@ -127,7 +127,7 @@ struct __static_array_impl<_Idx, _Tp, _FirstExt, _Extents...> {
 // End the recursion
 template <size_t _Idx, class _Tp, _Tp _FirstExt>
 struct __static_array_impl<_Idx, _Tp, _FirstExt> {
-  constexpr static _Tp get(size_t) noexcept { return _FirstExt; }
+  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get(size_t) noexcept { return _FirstExt; }
   template <size_t>
   _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get() {
     return _FirstExt;
@@ -137,7 +137,7 @@ struct __static_array_impl<_Idx, _Tp, _FirstExt> {
 // Don't start recursion if size 0
 template <class _Tp>
 struct __static_array_impl<0, _Tp> {
-  constexpr static _Tp get(size_t) noexcept { return _Tp(); }
+  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get(size_t) noexcept { return _Tp(); }
   template <size_t>
   _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get() {
     return _Tp();
@@ -164,7 +164,7 @@ struct __index_sequence_scan_impl;
 
 template <size_t _Idx, size_t _FirstVal, size_t... _Values>
 struct __index_sequence_scan_impl<_Idx, _FirstVal, _Values...> {
-  constexpr static size_t get(size_t __r) {
+  _LIBCPP_HIDE_FROM_ABI constexpr static size_t get(size_t __r) {
     if (__r > _Idx)
       return _FirstVal + __index_sequence_scan_impl<_Idx + 1, _Values...>::get(__r);
     else
@@ -177,16 +177,16 @@ struct __index_sequence_scan_impl<_Idx, _FirstVal> {
 #  if defined(__NVCC__) || defined(__NVCOMPILER)
   // NVCC warns about pointless comparison with 0 for _Idx==0 and r being const
   // evaluatable and also 0.
-  constexpr static size_t get(size_t __r) {
+  _LIBCPP_HIDE_FROM_ABI constexpr static size_t get(size_t __r) {
     return static_cast<int64_t>(_Idx) > static_cast<int64_t>(__r) ? _FirstVal : 0;
   }
 #  else
-  constexpr static size_t get(size_t __r) { return _Idx > __r ? _FirstVal : 0; }
+  _LIBCPP_HIDE_FROM_ABI constexpr static size_t get(size_t __r) { return _Idx > __r ? _FirstVal : 0; }
 #  endif
 };
 template <>
 struct __index_sequence_scan_impl<0> {
-  constexpr static size_t get(size_t) { return 0; }
+  _LIBCPP_HIDE_FROM_ABI constexpr static size_t get(size_t) { return 0; }
 };
 
 // ------------------------------------------------------------------
