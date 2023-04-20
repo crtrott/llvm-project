@@ -255,25 +255,25 @@ public:
 
   template <class _Tp, size_t _Num>
     requires(_Num == __size_dynamic_ && _Num > 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const std::array<_Tp, _Num>& __vals) {
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Num>& __vals) {
     for (size_t __r = 0; __r < _Num; __r++)
       __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
   }
 
   template <class _Tp, size_t _Num>
     requires(_Num == __size_dynamic_ && _Num == 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const std::array<_Tp, _Num>&) : __dyn_vals_{} {}
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Num>&) : __dyn_vals_{} {}
 
   template <class _Tp, size_t _Num >
     requires(_Num == __size_dynamic_ && _Num > 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const std::span<_Tp, _Num>& __vals) {
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Num>& __vals) {
     for (size_t __r = 0; __r < _Num; __r++)
       __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
   }
 
   template <class _Tp, size_t _Num>
     requires(_Num == __size_dynamic_ && _Num == 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const std::span<_Tp, _Num>&) : __dyn_vals_{} {}
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Num>&) : __dyn_vals_{} {}
 
   // constructors from all values
   template <class... _DynVals>
@@ -295,7 +295,7 @@ public:
 
   template <class _Tp, size_t _Num>
     requires(_Num != __size_dynamic_ && __size_dynamic_ > 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const std::array<_Tp, _Num>& __vals) {
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Num>& __vals) {
     static_assert((_Num == __size_), "Invalid number of values.");
     for (size_t __r = 0; __r < __size_; __r++) {
       _TStatic __static_val = __static_vals_t::get(__r);
@@ -311,7 +311,7 @@ public:
 
   template <class _Tp, size_t _Num>
     requires(_Num != __size_dynamic_ && __size_dynamic_ > 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const std::span<_Tp, _Num>& __vals) {
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Num>& __vals) {
     static_assert((_Num == __size_) || (__size_ == dynamic_extent));
     for (size_t __r = 0; __r < __size_; __r++) {
       _TStatic __static_val = __static_vals_t::get(__r);
@@ -359,7 +359,7 @@ public:
   using size_type  = make_unsigned_t<index_type>;
   using rank_type  = size_t;
 
-  static_assert(std::is_integral<index_type>::value && !std::is_same<index_type, bool>::value,
+  static_assert(is_integral<index_type>::value && !is_same<index_type, bool>::value,
                 "extents::index_type must be a signed or unsigned integer type");
 
 private:
@@ -411,30 +411,27 @@ private:
   template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
     requires(_Idx < __rank_)
   _LIBCPP_HIDE_FROM_ABI __vals_t __construct_vals_from_extents(
-      std::integral_constant<size_t, _DynCount>,
-      std::integral_constant<size_t, _Idx>,
+      integral_constant<size_t, _DynCount>,
+      integral_constant<size_t, _Idx>,
       const _OtherExtents& __exts,
       _DynamicValues... __dynamic_values) noexcept {
     if constexpr (static_extent(_Idx) == dynamic_extent)
       return __construct_vals_from_extents(
-          std::integral_constant<size_t, _DynCount + 1>(),
-          std::integral_constant<size_t, _Idx + 1>(),
+          integral_constant<size_t, _DynCount + 1>(),
+          integral_constant<size_t, _Idx + 1>(),
           __exts,
           __dynamic_values...,
           __exts.extent(_Idx));
     else
       return __construct_vals_from_extents(
-          std::integral_constant<size_t, _DynCount>(),
-          std::integral_constant<size_t, _Idx + 1>(),
-          __exts,
-          __dynamic_values...);
+          integral_constant<size_t, _DynCount>(), integral_constant<size_t, _Idx + 1>(), __exts, __dynamic_values...);
   }
 
   template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
     requires((_Idx == __rank_) && (_DynCount == __rank_dynamic_))
   _LIBCPP_HIDE_FROM_ABI __vals_t __construct_vals_from_extents(
-      std::integral_constant<size_t, _DynCount>,
-      std::integral_constant<size_t, _Idx>,
+      integral_constant<size_t, _DynCount>,
+      integral_constant<size_t, _Idx>,
       const _OtherExtents&,
       _DynamicValues... __dynamic_values) noexcept {
     return __vals_t{static_cast<index_type>(__dynamic_values)...};
@@ -449,8 +446,8 @@ public:
            (static_cast<make_unsigned_t<index_type>>(numeric_limits<index_type>::max()) <
             static_cast<make_unsigned_t<_OtherIndexType>>(numeric_limits<_OtherIndexType>::max())))
       _LIBCPP_HIDE_FROM_ABI constexpr extents(const extents<_OtherIndexType, _OtherExtents...>& __other) noexcept
-      : __vals_(__construct_vals_from_extents(
-            std::integral_constant<size_t, 0>(), std::integral_constant<size_t, 0>(), __other)) {}
+      : __vals_(
+            __construct_vals_from_extents(integral_constant<size_t, 0>(), integral_constant<size_t, 0>(), __other)) {}
 
   // Comparison operator
   template <class _OtherIndexType, size_t... _OtherExtents>
@@ -504,10 +501,10 @@ extents(_IndexTypes...) -> extents<size_t, size_t((_IndexTypes(), dynamic_extent
 namespace __mdspan_detail {
 
 template <class _Tp>
-struct __is_extents : ::std::false_type {};
+struct __is_extents : false_type {};
 
 template <class _IndexType, size_t... _ExtentsPack>
-struct __is_extents<extents<_IndexType, _ExtentsPack...>> : ::std::true_type {};
+struct __is_extents<extents<_IndexType, _ExtentsPack...>> : true_type {};
 
 template <class _Tp>
 inline constexpr bool __is_extents_v = __is_extents<_Tp>::value;
