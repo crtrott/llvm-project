@@ -462,12 +462,6 @@ public:
     }
     return __value;
   }
-
-  template <class _OtherIndexType, size_t... _OtherExtents>
-  _LIBCPP_HIDE_FROM_ABI friend constexpr bool
-  operator!=(extents const& __lhs, extents<_OtherIndexType, _OtherExtents...> const& __rhs) noexcept {
-    return !(__lhs == __rhs);
-  }
 };
 
 // Recursive helper classes to implement dextents alias for extents
