@@ -41,8 +41,7 @@
 int main() {
   constexpr size_t D = std::dynamic_extent;
   {
-    std::extents<int, D, 5> e1(3, 5); // should work
-    (void)e1;
+    [[maybe_unused]] std::extents<int, D, 5> e1(3, 5); // should work
   }
 
   TEST_LIBCPP_ASSERT_FAILURE(([] { std::extents<int, D, 5> e1(3, 3); }()),

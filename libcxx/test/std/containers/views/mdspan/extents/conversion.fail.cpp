@@ -59,17 +59,13 @@ void test_rank_mismatch() {
   constexpr size_t D = std::dynamic_extent;
   {
     std::extents<int> from;
-    std::extents<int, D> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D>'}}
-    (void) to;
+    [[maybe_unused]] std::extents<int, D> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D>'}}
   }
   {
     std::extents<int, D, D> from;
-    std::extents<int> to0(from); // expected-error {{no matching constructor for initialization of 'std::extents<int>'}}
-    std::extents<int, D> to1(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D>'}}
-    std::extents<int, D, D, D> to3(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D, D, D>'}}
-    (void) to0;
-    (void) to1;
-    (void) to3;
+    [[maybe_unused]] std::extents<int> to0(from); // expected-error {{no matching constructor for initialization of 'std::extents<int>'}}
+    [[maybe_unused]] std::extents<int, D> to1(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D>'}}
+    [[maybe_unused]] std::extents<int, D, D, D> to3(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D, D, D>'}}
   }
 }
 
@@ -77,18 +73,15 @@ void test_static_extent_mismatch() {
   constexpr size_t D = std::dynamic_extent;
   {
     std::extents<int, 3> from;
-    std::extents<int, 2> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, 2>'}}
-    (void) to;
+    [[maybe_unused]] std::extents<int, 2> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, 2>'}}
   }
   {
     std::extents<int, 3, D> from;
-    std::extents<int, 2, D> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, 2, D>'}}
-    (void) to;
+    [[maybe_unused]] std::extents<int, 2, D> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, 2, D>'}}
   }
   {
     std::extents<int, D, 2> from;
-    std::extents<int, D, 3> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D, 3>'}}
-    (void) to;
+    [[maybe_unused]] std::extents<int, D, 3> to(from); // expected-error {{no matching constructor for initialization of 'std::extents<int, D, 3>'}}
   }
 }
 // clang-format on
