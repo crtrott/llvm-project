@@ -408,36 +408,26 @@ public:
 
 private:
   // Function to construct extents storage from other extents.
-  // With C++ 17 the first two variants could be collapsed using if constexpr
-  // in which case you don't need all the requires clauses.
-  // in C++ 14 mode that doesn't work due to infinite recursion
   template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
-    requires((_Idx < __rank_) && (static_extent(_Idx) == dynamic_extent))
+    requires(_Idx < __rank_)
   _LIBCPP_HIDE_FROM_ABI __vals_t __construct_vals_from_extents(
       std::integral_constant<size_t, _DynCount>,
       std::integral_constant<size_t, _Idx>,
       const _OtherExtents& __exts,
       _DynamicValues... __dynamic_values) noexcept {
-    return __construct_vals_from_extents(
-        std::integral_constant<size_t, _DynCount + 1>(),
-        std::integral_constant<size_t, _Idx + 1>(),
-        __exts,
-        __dynamic_values...,
-        __exts.extent(_Idx));
-  }
-
-  template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
-    requires((_Idx < __rank_) && (static_extent(_Idx) != dynamic_extent))
-  _LIBCPP_HIDE_FROM_ABI __vals_t __construct_vals_from_extents(
-      std::integral_constant<size_t, _DynCount>,
-      std::integral_constant<size_t, _Idx>,
-      const _OtherExtents& __exts,
-      _DynamicValues... __dynamic_values) noexcept {
-    return __construct_vals_from_extents(
-        std::integral_constant<size_t, _DynCount>(),
-        std::integral_constant<size_t, _Idx + 1>(),
-        __exts,
-        __dynamic_values...);
+    if constexpr (static_extent(_Idx) == dynamic_extent)
+      return __construct_vals_from_extents(
+          std::integral_constant<size_t, _DynCount + 1>(),
+          std::integral_constant<size_t, _Idx + 1>(),
+          __exts,
+          __dynamic_values...,
+          __exts.extent(_Idx));
+    else
+      return __construct_vals_from_extents(
+          std::integral_constant<size_t, _DynCount>(),
+          std::integral_constant<size_t, _Idx + 1>(),
+          __exts,
+          __dynamic_values...);
   }
 
   template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
