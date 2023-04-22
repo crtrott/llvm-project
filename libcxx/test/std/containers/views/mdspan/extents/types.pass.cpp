@@ -36,6 +36,7 @@ void testExtents() {
 
   static_assert(std::regular<E>);
   static_assert(std::is_trivially_copyable_v<E>);
+  static_assert(std::is_empty_v<E> == (E::rank_dynamic() == 0));
 }
 
 template <class IndexType, size_t... Extents>
