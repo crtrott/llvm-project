@@ -102,53 +102,18 @@ namespace __mdspan_detail {
 // ------------ __static_array --------------------------------------
 // ------------------------------------------------------------------
 // array like class which provides an array of static values with get
-
-// Implementation of Static Array with recursive implementation of get.
-template <size_t _Idx, class _Tp, _Tp... _Extents>
-struct __static_array_impl;
-
-template <size_t _Idx, class _Tp, _Tp _FirstExt, _Tp... _Extents>
-struct __static_array_impl<_Idx, _Tp, _FirstExt, _Extents...> {
-  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get(size_t __r) noexcept {
-    if (__r == _Idx)
-      return _FirstExt;
-    else
-      return __static_array_impl<_Idx + 1, _Tp, _Extents...>::get(__r);
-  }
-  template <size_t __r>
-  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get() {
-    if constexpr (__r == _Idx)
-      return _FirstExt;
-    else
-      return __static_array_impl<_Idx + 1, _Tp, _Extents...>::template get<__r>();
-  }
-};
-
-// End the recursion
-template <size_t _Idx, class _Tp, _Tp _FirstExt>
-struct __static_array_impl<_Idx, _Tp, _FirstExt> {
-  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get(size_t) noexcept { return _FirstExt; }
-  template <size_t>
-  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get() {
-    return _FirstExt;
-  }
-};
-
-// Don't start recursion if size 0
-template <class _Tp>
-struct __static_array_impl<0, _Tp> {
-  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get(size_t) noexcept { return _Tp(); }
-  template <size_t>
-  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp get() {
-    return _Tp();
-  }
-};
-
-// Static array, provides get<r>(), get(r) and operator[r]
 template <class _Tp, _Tp... _Values>
-struct __static_array : public __static_array_impl<0, _Tp, _Values...> {
+struct __static_array {
+  static constexpr array<_Tp, sizeof...(_Values)> __array = {_Values...};
+
 public:
-  _LIBCPP_HIDE_FROM_ABI constexpr static size_t size() { return sizeof...(_Values); }
+  _LIBCPP_HIDE_FROM_ABI constexpr static size_t __size() { return sizeof...(_Values); }
+  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp __get(size_t __index) noexcept { return __array[__index]; }
+
+  template <size_t _Index>
+  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp __get() {
+    return __get(_Index);
+  }
 };
 
 // ------------------------------------------------------------------
