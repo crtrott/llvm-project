@@ -54,6 +54,7 @@ template <class E, class AllExtents>
 constexpr size_t test_runtime_observers(E ext, AllExtents expected) {
   size_t result = 0;
   for (typename E::rank_type r = 0; r < ext.rank(); r++) {
+    assert(static_cast<typename E::index_type>(expected[r]) == ext.extent(r));
     result += ext.extent(r) == static_cast<typename E::index_type>(expected[r]);
     result += ext.extent(r);
   }

@@ -207,8 +207,8 @@ struct __possibly_empty_array {
 
 template <class _Tp>
 struct __possibly_empty_array<_Tp, 0> {
-  _LIBCPP_HIDE_FROM_ABI constexpr _Tp operator[](size_t) { return _Tp(); }
-  _LIBCPP_HIDE_FROM_ABI constexpr const _Tp operator[](size_t) const { return _Tp(); }
+  _LIBCPP_HIDE_FROM_ABI constexpr _Tp& operator[](size_t) { unreachable(); }
+  _LIBCPP_HIDE_FROM_ABI constexpr const _Tp& operator[](size_t) const { unreachable(); }
 };
 
 // ------------------------------------------------------------------
