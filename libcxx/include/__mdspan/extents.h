@@ -204,6 +204,20 @@ public:
   _LIBCPP_HIDE_FROM_ABI static constexpr size_t __size_dynamic() { return __size_dynamic_; }
 };
 
+// Function to check whether a value is representable as another type
+// value must be a positive integer
+template <class _To, class _From>
+constexpr bool __is_representable_as(_From value) {
+  using _To_u   = make_unsigned_t<_To>;
+  using _From_u = make_unsigned_t<_From>;
+  if constexpr (static_cast<_To_u>(std::numeric_limits<_To>::max()) >=
+                static_cast<_From_u>(std::numeric_limits<_From_u>::max())) {
+    return true;
+  } else {
+    return static_cast<_To_u>(std::numeric_limits<_To>::max()) >= static_cast<_From_u>(value);
+  }
+}
+
 } // namespace __mdspan_detail
 
 // ------------------------------------------------------------------
@@ -224,6 +238,8 @@ public:
 
   static_assert(is_integral<index_type>::value && !is_same<index_type, bool>::value,
                 "extents::index_type must be a signed or unsigned integer type");
+  static_assert(((__mdspan_detail::__is_representable_as<_IndexType>(_Extents) || (_Extents == dynamic_extent)) && ...),
+                "extents arguments must be representable as index_type");
 
 private:
   static constexpr rank_type __rank_         = sizeof...(_Extents);
