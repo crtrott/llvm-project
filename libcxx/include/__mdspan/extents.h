@@ -200,15 +200,6 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(_DynVals... __vals)
       : __dyn_vals_{static_cast<_TDynamic>(__vals)...} {}
 
-  template <class _Tp, size_t _Size>
-    requires(_Size == __size_dynamic_)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array([[maybe_unused]] const array<_Tp, _Size>& __vals) {
-    if constexpr (_Size > 0) {
-      for (size_t __i = 0; __i < _Size; __i++)
-        __dyn_vals_[__i] = static_cast<_TDynamic>(__vals[__i]);
-    }
-  }
-
   template <class _Tp, size_t _Size >
     requires(_Size == __size_dynamic_)
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array([[maybe_unused]] const span<_Tp, _Size>& __vals) {
@@ -232,22 +223,6 @@ public:
       // Precondition check
       else
         _LIBCPP_ASSERT(__values[__i] == static_cast<_TDynamic>(__static_val),
-                       "extents construction: mismatch of provided arguments with static extents.");
-    }
-  }
-
-  template <class _Tp, size_t _Size>
-    requires(_Size != __size_dynamic_)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Size>& __vals) {
-    static_assert((_Size == __size_), "Invalid number of values.");
-    for (size_t __i = 0; __i < __size_; __i++) {
-      _TStatic __static_val = _StaticValues::__get(__i);
-      if (__static_val == _DynTag) {
-        __dyn_vals_[_DynamicIdxMap::__get(__i)] = static_cast<_TDynamic>(__vals[__i]);
-      }
-      // Precondition check
-      else
-        _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__i]) == static_cast<_TDynamic>(__static_val),
                        "extents construction: mismatch of provided arguments with static extents.");
     }
   }
@@ -310,8 +285,8 @@ private:
   static constexpr rank_type __rank_dynamic_ = ((_Extents == dynamic_extent) + ... + 0);
 
   // internal storage type using __maybe_static_array
-  using __vals_t = __mdspan_detail::__maybe_static_array<_IndexType, size_t, dynamic_extent, _Extents...>;
-  [[no_unique_address]] __vals_t __vals_;
+  using _Values = __mdspan_detail::__maybe_static_array<_IndexType, size_t, dynamic_extent, _Extents...>;
+  [[no_unique_address]] _Values __vals_;
 
 public:
   // [mdspan.extents.obs], observers of multidimensional index space
@@ -320,7 +295,7 @@ public:
 
   _LIBCPP_HIDE_FROM_ABI constexpr index_type extent(rank_type __r) const noexcept { return __vals_.__value(__r); }
   _LIBCPP_HIDE_FROM_ABI static constexpr size_t static_extent(rank_type __r) noexcept {
-    return __vals_t::__static_value(__r);
+    return _Values::__static_value(__r);
   }
 
   // [mdspan.extents.cons], constructors
@@ -340,20 +315,20 @@ public:
              (_Size == __rank_ || _Size == __rank_dynamic_))
   explicit(_Size != __rank_dynamic_)
       _LIBCPP_HIDE_FROM_ABI constexpr extents(const array<_OtherIndexType, _Size>& __exts) noexcept
-      : __vals_(std::move(__exts)) {}
+      : __vals_(span(__exts)) {}
 
   template <class _OtherIndexType, size_t _Size>
     requires(is_convertible_v<_OtherIndexType, index_type> && is_nothrow_constructible_v<index_type, _OtherIndexType> &&
              (_Size == __rank_ || _Size == __rank_dynamic_))
   explicit(_Size != __rank_dynamic_)
       _LIBCPP_HIDE_FROM_ABI constexpr extents(const span<_OtherIndexType, _Size>& __exts) noexcept
-      : __vals_(std::move(__exts)) {}
+      : __vals_(__exts) {}
 
 private:
   // Function to construct extents storage from other extents.
   template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
     requires(_Idx < __rank_)
-  _LIBCPP_HIDE_FROM_ABI __vals_t __construct_vals_from_extents(
+  _LIBCPP_HIDE_FROM_ABI _Values __construct_vals_from_extents(
       integral_constant<size_t, _DynCount>,
       integral_constant<size_t, _Idx>,
       const _OtherExtents& __exts,
@@ -372,12 +347,12 @@ private:
 
   template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
     requires((_Idx == __rank_) && (_DynCount == __rank_dynamic_))
-  _LIBCPP_HIDE_FROM_ABI __vals_t __construct_vals_from_extents(
+  _LIBCPP_HIDE_FROM_ABI _Values __construct_vals_from_extents(
       integral_constant<size_t, _DynCount>,
       integral_constant<size_t, _Idx>,
       const _OtherExtents&,
       _DynamicValues... __dynamic_values) noexcept {
-    return __vals_t{static_cast<index_type>(__dynamic_values)...};
+    return _Values{static_cast<index_type>(__dynamic_values)...};
   }
 
 public:
