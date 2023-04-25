@@ -117,44 +117,6 @@ public:
 };
 
 // ------------------------------------------------------------------
-// ------------ index_sequence_scan ---------------------------------
-// ------------------------------------------------------------------
-
-// index_sequence_scan takes compile time values and provides get(r)
-//  which return the sum of the first r-1 values.
-
-// Recursive implementation for get
-template <size_t _Idx, size_t... _Values>
-struct __index_sequence_scan_impl;
-
-template <size_t _Idx, size_t _FirstVal, size_t... _Values>
-struct __index_sequence_scan_impl<_Idx, _FirstVal, _Values...> {
-  _LIBCPP_HIDE_FROM_ABI constexpr static size_t get(size_t __r) {
-    if (__r > _Idx)
-      return _FirstVal + __index_sequence_scan_impl<_Idx + 1, _Values...>::get(__r);
-    else
-      return 0;
-  }
-};
-
-template <size_t _Idx, size_t _FirstVal>
-struct __index_sequence_scan_impl<_Idx, _FirstVal> {
-#  if defined(__NVCC__) || defined(__NVCOMPILER)
-  // NVCC warns about pointless comparison with 0 for _Idx==0 and r being const
-  // evaluatable and also 0.
-  _LIBCPP_HIDE_FROM_ABI constexpr static size_t get(size_t __r) {
-    return static_cast<int64_t>(_Idx) > static_cast<int64_t>(__r) ? _FirstVal : 0;
-  }
-#  else
-  _LIBCPP_HIDE_FROM_ABI constexpr static size_t get(size_t __r) { return _Idx > __r ? _FirstVal : 0; }
-#  endif
-};
-template <>
-struct __index_sequence_scan_impl<0> {
-  _LIBCPP_HIDE_FROM_ABI constexpr static size_t get(size_t) { return 0; }
-};
-
-// ------------------------------------------------------------------
 // ------------ __possibly_empty_array  -----------------------------
 // ------------------------------------------------------------------
 
@@ -174,6 +136,32 @@ template <class _Tp>
 struct __possibly_empty_array<_Tp, 0> {
   _LIBCPP_HIDE_FROM_ABI constexpr _Tp& operator[](size_t) { unreachable(); }
   _LIBCPP_HIDE_FROM_ABI constexpr const _Tp& operator[](size_t) const { unreachable(); }
+};
+
+// ------------------------------------------------------------------
+// ------------ static_partial_sums ---------------------------------
+// ------------------------------------------------------------------
+
+// Provides a compile time partial sum one can index into
+
+template <std::size_t... _Values>
+_LIBCPP_HIDE_FROM_ABI constexpr __possibly_empty_array<size_t, sizeof...(_Values)> __static_partial_sums_impl() {
+  __possibly_empty_array<size_t, sizeof...(_Values)> __values = {_Values...};
+  __possibly_empty_array<size_t, sizeof...(_Values)> __partial_sums;
+  size_t __running_sum = 0;
+  for (int __i = 0; __i != sizeof...(_Values); ++__i) {
+    __partial_sums[__i] = __running_sum;
+    __running_sum += __values[__i];
+  }
+  return __partial_sums;
+}
+
+template <size_t... _Values>
+struct __static_partial_sums {
+  static constexpr __possibly_empty_array<size_t, sizeof...(_Values)> __result{
+      __static_partial_sums_impl<_Values...>()};
+
+  _LIBCPP_HIDE_FROM_ABI constexpr static size_t __get(size_t __index) { return __result[__index]; }
 };
 
 // ------------------------------------------------------------------
@@ -201,7 +189,7 @@ private:
   [[no_unique_address]] __possibly_empty_array<_TDynamic, __size_dynamic_> __dyn_vals_;
 
   // static mapping of indices to the position in the dynamic values array
-  using __dyn_map_t = __index_sequence_scan_impl<0, static_cast<size_t>(_Values == _DynTag)...>;
+  using __dyn_map_t = __static_partial_sums<static_cast<size_t>(_Values == _DynTag)...>;
 
 public:
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array() = default;
@@ -247,9 +235,9 @@ public:
     static_assert((sizeof...(_DynVals) == __size_), "Invalid number of values.");
     _TDynamic __values[__size_]{static_cast<_TDynamic>(__vals)...};
     for (size_t __r = 0; __r < __size_; __r++) {
-      _TStatic __static_val = __static_vals_t::get(__r);
+      _TStatic __static_val = __static_vals_t::__get(__r);
       if (__static_val == _DynTag) {
-        __dyn_vals_[__dyn_map_t::get(__r)] = __values[__r];
+        __dyn_vals_[__dyn_map_t::__get(__r)] = __values[__r];
       }
       // Precondition check
       else
@@ -263,9 +251,9 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Num>& __vals) {
     static_assert((_Num == __size_), "Invalid number of values.");
     for (size_t __r = 0; __r < __size_; __r++) {
-      _TStatic __static_val = __static_vals_t::get(__r);
+      _TStatic __static_val = __static_vals_t::__get(__r);
       if (__static_val == _DynTag) {
-        __dyn_vals_[__dyn_map_t::get(__r)] = static_cast<_TDynamic>(__vals[__r]);
+        __dyn_vals_[__dyn_map_t::__get(__r)] = static_cast<_TDynamic>(__vals[__r]);
       }
       // Precondition check
       else
@@ -279,9 +267,9 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Num>& __vals) {
     static_assert((_Num == __size_) || (__size_ == dynamic_extent));
     for (size_t __r = 0; __r < __size_; __r++) {
-      _TStatic __static_val = __static_vals_t::get(__r);
+      _TStatic __static_val = __static_vals_t::__get(__r);
       if (__static_val == _DynTag) {
-        __dyn_vals_[__dyn_map_t::get(__r)] = static_cast<_TDynamic>(__vals[__r]);
+        __dyn_vals_[__dyn_map_t::__get(__r)] = static_cast<_TDynamic>(__vals[__r]);
       }
       // Precondition check
       else
@@ -292,12 +280,12 @@ public:
 
   // access functions
   _LIBCPP_HIDE_FROM_ABI constexpr static _TStatic __static_value(size_t __r) noexcept {
-    return __static_vals_t::get(__r);
+    return __static_vals_t::__get(__r);
   }
 
   _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic __value(size_t __r) const {
-    _TStatic __static_val = __static_vals_t::get(__r);
-    return __static_val == _DynTag ? __dyn_vals_[__dyn_map_t::get(__r)] : static_cast<_TDynamic>(__static_val);
+    _TStatic __static_val = __static_vals_t::__get(__r);
+    return __static_val == _DynTag ? __dyn_vals_[__dyn_map_t::__get(__r)] : static_cast<_TDynamic>(__static_val);
   }
   _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic operator[](size_t __r) const { return __value(__r); }
 
