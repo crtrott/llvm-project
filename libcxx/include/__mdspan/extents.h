@@ -181,7 +181,7 @@ struct __maybe_static_array {
 
 private:
   // Static values member
-  using __static_vals_t                   = __static_array<_TStatic, _Values...>;
+  using _StaticValues                     = __static_array<_TStatic, _Values...>;
   constexpr static size_t __size_         = sizeof...(_Values);
   constexpr static size_t __size_dynamic_ = ((_Values == _DynTag) + ... + 0);
 
@@ -189,7 +189,7 @@ private:
   [[no_unique_address]] __possibly_empty_array<_TDynamic, __size_dynamic_> __dyn_vals_;
 
   // static mapping of indices to the position in the dynamic values array
-  using __dyn_map_t = __static_partial_sums<static_cast<size_t>(_Values == _DynTag)...>;
+  using _DynamicIdxMap = __static_partial_sums<static_cast<size_t>(_Values == _DynTag)...>;
 
 public:
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array() = default;
@@ -235,9 +235,9 @@ public:
     static_assert((sizeof...(_DynVals) == __size_), "Invalid number of values.");
     _TDynamic __values[__size_]{static_cast<_TDynamic>(__vals)...};
     for (size_t __i = 0; __i < __size_; __i++) {
-      _TStatic __static_val = __static_vals_t::__get(__i);
+      _TStatic __static_val = _StaticValues::__get(__i);
       if (__static_val == _DynTag) {
-        __dyn_vals_[__dyn_map_t::__get(__i)] = __values[__i];
+        __dyn_vals_[_DynamicIdxMap::__get(__i)] = __values[__i];
       }
       // Precondition check
       else
@@ -251,9 +251,9 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Size>& __vals) {
     static_assert((_Size == __size_), "Invalid number of values.");
     for (size_t __i = 0; __i < __size_; __i++) {
-      _TStatic __static_val = __static_vals_t::__get(__i);
+      _TStatic __static_val = _StaticValues::__get(__i);
       if (__static_val == _DynTag) {
-        __dyn_vals_[__dyn_map_t::__get(__i)] = static_cast<_TDynamic>(__vals[__i]);
+        __dyn_vals_[_DynamicIdxMap::__get(__i)] = static_cast<_TDynamic>(__vals[__i]);
       }
       // Precondition check
       else
@@ -267,9 +267,9 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Size>& __vals) {
     static_assert((_Size == __size_) || (__size_ == dynamic_extent));
     for (size_t __i = 0; __i < __size_; __i++) {
-      _TStatic __static_val = __static_vals_t::__get(__i);
+      _TStatic __static_val = _StaticValues::__get(__i);
       if (__static_val == _DynTag) {
-        __dyn_vals_[__dyn_map_t::__get(__i)] = static_cast<_TDynamic>(__vals[__i]);
+        __dyn_vals_[_DynamicIdxMap::__get(__i)] = static_cast<_TDynamic>(__vals[__i]);
       }
       // Precondition check
       else
@@ -280,12 +280,12 @@ public:
 
   // access functions
   _LIBCPP_HIDE_FROM_ABI constexpr static _TStatic __static_value(size_t __i) noexcept {
-    return __static_vals_t::__get(__i);
+    return _StaticValues::__get(__i);
   }
 
   _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic __value(size_t __i) const {
-    _TStatic __static_val = __static_vals_t::__get(__i);
-    return __static_val == _DynTag ? __dyn_vals_[__dyn_map_t::__get(__i)] : static_cast<_TDynamic>(__static_val);
+    _TStatic __static_val = _StaticValues::__get(__i);
+    return __static_val == _DynTag ? __dyn_vals_[_DynamicIdxMap::__get(__i)] : static_cast<_TDynamic>(__static_val);
   }
   _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic operator[](size_t __i) const { return __value(__i); }
 
