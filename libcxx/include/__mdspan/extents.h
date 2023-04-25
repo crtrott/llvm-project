@@ -107,11 +107,11 @@ struct __static_array {
   static constexpr array<_Tp, sizeof...(_Values)> __array = {_Values...};
 
 public:
-  _LIBCPP_HIDE_FROM_ABI constexpr static size_t __size() { return sizeof...(_Values); }
-  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp __get(size_t __index) noexcept { return __array[__index]; }
+  _LIBCPP_HIDE_FROM_ABI static constexpr size_t __size() { return sizeof...(_Values); }
+  _LIBCPP_HIDE_FROM_ABI static constexpr _Tp __get(size_t __index) noexcept { return __array[__index]; }
 
   template <size_t _Index>
-  _LIBCPP_HIDE_FROM_ABI constexpr static _Tp __get() {
+  _LIBCPP_HIDE_FROM_ABI static constexpr _Tp __get() {
     return __get(_Index);
   }
 };
@@ -161,7 +161,7 @@ struct __static_partial_sums {
   static constexpr __possibly_empty_array<size_t, sizeof...(_Values)> __result{
       __static_partial_sums_impl<_Values...>()};
 
-  _LIBCPP_HIDE_FROM_ABI constexpr static size_t __get(size_t __index) { return __result[__index]; }
+  _LIBCPP_HIDE_FROM_ABI static constexpr size_t __get(size_t __index) { return __result[__index]; }
 };
 
 // ------------------------------------------------------------------
@@ -182,8 +182,8 @@ struct __maybe_static_array {
 private:
   // Static values member
   using _StaticValues                     = __static_array<_TStatic, _Values...>;
-  constexpr static size_t __size_         = sizeof...(_Values);
-  constexpr static size_t __size_dynamic_ = ((_Values == _DynTag) + ... + 0);
+  static constexpr size_t __size_         = sizeof...(_Values);
+  static constexpr size_t __size_dynamic_ = ((_Values == _DynTag) + ... + 0);
 
   // Dynamic values member
   [[no_unique_address]] __possibly_empty_array<_TDynamic, __size_dynamic_> __dyn_vals_;
@@ -269,7 +269,7 @@ public:
   }
 
   // access functions
-  _LIBCPP_HIDE_FROM_ABI constexpr static _TStatic __static_value(size_t __i) noexcept {
+  _LIBCPP_HIDE_FROM_ABI static constexpr _TStatic __static_value(size_t __i) noexcept {
     return _StaticValues::__get(__i);
   }
 
@@ -280,8 +280,8 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic operator[](size_t __i) const { return __value(__i); }
 
   // observers
-  _LIBCPP_HIDE_FROM_ABI constexpr static size_t __size() { return __size_; }
-  _LIBCPP_HIDE_FROM_ABI constexpr static size_t __size_dynamic() { return __size_dynamic_; }
+  _LIBCPP_HIDE_FROM_ABI static constexpr size_t __size() { return __size_; }
+  _LIBCPP_HIDE_FROM_ABI static constexpr size_t __size_dynamic() { return __size_dynamic_; }
 };
 
 } // namespace __mdspan_detail
@@ -306,8 +306,8 @@ public:
                 "extents::index_type must be a signed or unsigned integer type");
 
 private:
-  constexpr static rank_type __rank_         = sizeof...(_Extents);
-  constexpr static rank_type __rank_dynamic_ = ((_Extents == dynamic_extent) + ... + 0);
+  static constexpr rank_type __rank_         = sizeof...(_Extents);
+  static constexpr rank_type __rank_dynamic_ = ((_Extents == dynamic_extent) + ... + 0);
 
   // internal storage type using __maybe_static_array
   using __vals_t = __mdspan_detail::__maybe_static_array<_IndexType, size_t, dynamic_extent, _Extents...>;
@@ -315,11 +315,11 @@ private:
 
 public:
   // [mdspan.extents.obs], observers of multidimensional index space
-  _LIBCPP_HIDE_FROM_ABI constexpr static rank_type rank() noexcept { return __rank_; }
-  _LIBCPP_HIDE_FROM_ABI constexpr static rank_type rank_dynamic() noexcept { return __rank_dynamic_; }
+  _LIBCPP_HIDE_FROM_ABI static constexpr rank_type rank() noexcept { return __rank_; }
+  _LIBCPP_HIDE_FROM_ABI static constexpr rank_type rank_dynamic() noexcept { return __rank_dynamic_; }
 
   _LIBCPP_HIDE_FROM_ABI constexpr index_type extent(rank_type __r) const noexcept { return __vals_.__value(__r); }
-  _LIBCPP_HIDE_FROM_ABI constexpr static size_t static_extent(rank_type __r) noexcept {
+  _LIBCPP_HIDE_FROM_ABI static constexpr size_t static_extent(rank_type __r) noexcept {
     return __vals_t::__static_value(__r);
   }
 
