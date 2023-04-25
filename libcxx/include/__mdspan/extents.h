@@ -125,9 +125,9 @@ public:
 // This is needed to make the __maybe_static_array be truly empty, for
 // all static values.
 
-template <class _Tp, size_t _Num>
+template <class _Tp, size_t _Size>
 struct __possibly_empty_array {
-  _Tp __vals_[_Num];
+  _Tp __vals_[_Size];
   _LIBCPP_HIDE_FROM_ABI constexpr _Tp& operator[](size_t __r) { return __vals_[__r]; }
   _LIBCPP_HIDE_FROM_ABI constexpr const _Tp& operator[](size_t __r) const { return __vals_[__r]; }
 };
@@ -206,27 +206,27 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(_DynVals... __vals)
       : __dyn_vals_{static_cast<_TDynamic>(__vals)...} {}
 
-  template <class _Tp, size_t _Num>
-    requires(_Num == __size_dynamic_ && _Num > 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Num>& __vals) {
-    for (size_t __r = 0; __r < _Num; __r++)
+  template <class _Tp, size_t _Size>
+    requires(_Size == __size_dynamic_ && _Size > 0)
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Size>& __vals) {
+    for (size_t __r = 0; __r < _Size; __r++)
       __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
   }
 
-  template <class _Tp, size_t _Num>
-    requires(_Num == __size_dynamic_ && _Num == 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Num>&) : __dyn_vals_{} {}
+  template <class _Tp, size_t _Size>
+    requires(_Size == __size_dynamic_ && _Size == 0)
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Size>&) : __dyn_vals_{} {}
 
-  template <class _Tp, size_t _Num >
-    requires(_Num == __size_dynamic_ && _Num > 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Num>& __vals) {
-    for (size_t __r = 0; __r < _Num; __r++)
+  template <class _Tp, size_t _Size >
+    requires(_Size == __size_dynamic_ && _Size > 0)
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Size>& __vals) {
+    for (size_t __r = 0; __r < _Size; __r++)
       __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
   }
 
-  template <class _Tp, size_t _Num>
-    requires(_Num == __size_dynamic_ && _Num == 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Num>&) : __dyn_vals_{} {}
+  template <class _Tp, size_t _Size>
+    requires(_Size == __size_dynamic_ && _Size == 0)
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Size>&) : __dyn_vals_{} {}
 
   // constructors from all values
   template <class... _DynVals>
@@ -246,10 +246,10 @@ public:
     }
   }
 
-  template <class _Tp, size_t _Num>
-    requires(_Num != __size_dynamic_ && __size_dynamic_ > 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Num>& __vals) {
-    static_assert((_Num == __size_), "Invalid number of values.");
+  template <class _Tp, size_t _Size>
+    requires(_Size != __size_dynamic_ && __size_dynamic_ > 0)
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Size>& __vals) {
+    static_assert((_Size == __size_), "Invalid number of values.");
     for (size_t __r = 0; __r < __size_; __r++) {
       _TStatic __static_val = __static_vals_t::__get(__r);
       if (__static_val == _DynTag) {
@@ -262,10 +262,10 @@ public:
     }
   }
 
-  template <class _Tp, size_t _Num>
-    requires(_Num != __size_dynamic_ && __size_dynamic_ > 0)
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Num>& __vals) {
-    static_assert((_Num == __size_) || (__size_ == dynamic_extent));
+  template <class _Tp, size_t _Size>
+    requires(_Size != __size_dynamic_ && __size_dynamic_ > 0)
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Size>& __vals) {
+    static_assert((_Size == __size_) || (__size_ == dynamic_extent));
     for (size_t __r = 0; __r < __size_; __r++) {
       _TStatic __static_val = __static_vals_t::__get(__r);
       if (__static_val == _DynTag) {
@@ -345,18 +345,18 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr explicit extents(_OtherIndexTypes... __dynvals) noexcept
       : __vals_(static_cast<index_type>(__dynvals)...) {}
 
-  template <class _OtherIndexType, size_t _Num>
+  template <class _OtherIndexType, size_t _Size>
     requires(is_convertible_v<_OtherIndexType, index_type> && is_nothrow_constructible_v<index_type, _OtherIndexType> &&
-             (_Num == __rank_ || _Num == __rank_dynamic_))
-  explicit(_Num != __rank_dynamic_)
-      _LIBCPP_HIDE_FROM_ABI constexpr extents(const array<_OtherIndexType, _Num>& __exts) noexcept
+             (_Size == __rank_ || _Size == __rank_dynamic_))
+  explicit(_Size != __rank_dynamic_)
+      _LIBCPP_HIDE_FROM_ABI constexpr extents(const array<_OtherIndexType, _Size>& __exts) noexcept
       : __vals_(std::move(__exts)) {}
 
-  template <class _OtherIndexType, size_t _Num>
+  template <class _OtherIndexType, size_t _Size>
     requires(is_convertible_v<_OtherIndexType, index_type> && is_nothrow_constructible_v<index_type, _OtherIndexType> &&
-             (_Num == __rank_ || _Num == __rank_dynamic_))
-  explicit(_Num != __rank_dynamic_)
-      _LIBCPP_HIDE_FROM_ABI constexpr extents(const span<_OtherIndexType, _Num>& __exts) noexcept
+             (_Size == __rank_ || _Size == __rank_dynamic_))
+  explicit(_Size != __rank_dynamic_)
+      _LIBCPP_HIDE_FROM_ABI constexpr extents(const span<_OtherIndexType, _Size>& __exts) noexcept
       : __vals_(std::move(__exts)) {}
 
 private:
