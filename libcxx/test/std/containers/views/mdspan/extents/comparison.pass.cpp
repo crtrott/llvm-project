@@ -23,6 +23,7 @@
 
 template <class To, class From>
 void test_comparison(bool equal, To dest, From src) {
+  ASSERT_NOEXCEPT(dest == src);
   assert((dest == src) == equal);
   assert((dest != src) != equal);
 }

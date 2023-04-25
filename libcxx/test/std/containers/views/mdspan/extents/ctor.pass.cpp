@@ -49,6 +49,7 @@ template <class E, class AllExtents>
 void test_runtime_observers(E ext, AllExtents expected) {
   for (typename E::rank_type r = 0; r < ext.rank(); r++) {
     ASSERT_SAME_TYPE(decltype(ext.extent(0)), typename E::index_type);
+    ASSERT_NOEXCEPT(ext.extent(0));
     assert(ext.extent(r) == static_cast<typename E::index_type>(expected[r]));
   }
 }
@@ -67,13 +68,17 @@ void test_implicit_construction(AllExtents all_ext, Extents ext) {
 
 template <class E, class AllExtents, class Extents, size_t... Indices>
 void test_construction(AllExtents all_ext, Extents ext, std::index_sequence<Indices...>) {
+  // default construction
+  ASSERT_NOEXCEPT(E{});
   // construction from indices
+  ASSERT_NOEXCEPT(E(ext[Indices]...));
   test_runtime_observers(E(ext[Indices]...), all_ext);
   // construction from array
+  ASSERT_NOEXCEPT(E(ext));
   test_runtime_observers(E(ext), all_ext);
   // construction from span
-  test_runtime_observers(
-      E(std::span<typename Extents::value_type, sizeof...(Indices)>(ext.data(), sizeof...(Indices))), all_ext);
+  ASSERT_NOEXCEPT(E(std::span(ext)));
+  test_runtime_observers(E(std::span(ext)), all_ext);
 }
 
 template <class E, class AllExtents>
