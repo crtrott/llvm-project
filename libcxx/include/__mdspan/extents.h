@@ -128,8 +128,8 @@ public:
 template <class _Tp, size_t _Size>
 struct __possibly_empty_array {
   _Tp __vals_[_Size];
-  _LIBCPP_HIDE_FROM_ABI constexpr _Tp& operator[](size_t __r) { return __vals_[__r]; }
-  _LIBCPP_HIDE_FROM_ABI constexpr const _Tp& operator[](size_t __r) const { return __vals_[__r]; }
+  _LIBCPP_HIDE_FROM_ABI constexpr _Tp& operator[](size_t __index) { return __vals_[__index]; }
+  _LIBCPP_HIDE_FROM_ABI constexpr const _Tp& operator[](size_t __index) const { return __vals_[__index]; }
 };
 
 template <class _Tp>
@@ -209,8 +209,8 @@ public:
   template <class _Tp, size_t _Size>
     requires(_Size == __size_dynamic_ && _Size > 0)
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Size>& __vals) {
-    for (size_t __r = 0; __r < _Size; __r++)
-      __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
+    for (size_t __i = 0; __i < _Size; __i++)
+      __dyn_vals_[__i] = static_cast<_TDynamic>(__vals[__i]);
   }
 
   template <class _Tp, size_t _Size>
@@ -220,8 +220,8 @@ public:
   template <class _Tp, size_t _Size >
     requires(_Size == __size_dynamic_ && _Size > 0)
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Size>& __vals) {
-    for (size_t __r = 0; __r < _Size; __r++)
-      __dyn_vals_[__r] = static_cast<_TDynamic>(__vals[__r]);
+    for (size_t __i = 0; __i < _Size; __i++)
+      __dyn_vals_[__i] = static_cast<_TDynamic>(__vals[__i]);
   }
 
   template <class _Tp, size_t _Size>
@@ -234,14 +234,14 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(_DynVals... __vals) {
     static_assert((sizeof...(_DynVals) == __size_), "Invalid number of values.");
     _TDynamic __values[__size_]{static_cast<_TDynamic>(__vals)...};
-    for (size_t __r = 0; __r < __size_; __r++) {
-      _TStatic __static_val = __static_vals_t::__get(__r);
+    for (size_t __i = 0; __i < __size_; __i++) {
+      _TStatic __static_val = __static_vals_t::__get(__i);
       if (__static_val == _DynTag) {
-        __dyn_vals_[__dyn_map_t::__get(__r)] = __values[__r];
+        __dyn_vals_[__dyn_map_t::__get(__i)] = __values[__i];
       }
       // Precondition check
       else
-        _LIBCPP_ASSERT(__values[__r] == static_cast<_TDynamic>(__static_val),
+        _LIBCPP_ASSERT(__values[__i] == static_cast<_TDynamic>(__static_val),
                        "extents construction: mismatch of provided arguments with static extents.");
     }
   }
@@ -250,14 +250,14 @@ public:
     requires(_Size != __size_dynamic_ && __size_dynamic_ > 0)
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const array<_Tp, _Size>& __vals) {
     static_assert((_Size == __size_), "Invalid number of values.");
-    for (size_t __r = 0; __r < __size_; __r++) {
-      _TStatic __static_val = __static_vals_t::__get(__r);
+    for (size_t __i = 0; __i < __size_; __i++) {
+      _TStatic __static_val = __static_vals_t::__get(__i);
       if (__static_val == _DynTag) {
-        __dyn_vals_[__dyn_map_t::__get(__r)] = static_cast<_TDynamic>(__vals[__r]);
+        __dyn_vals_[__dyn_map_t::__get(__i)] = static_cast<_TDynamic>(__vals[__i]);
       }
       // Precondition check
       else
-        _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val),
+        _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__i]) == static_cast<_TDynamic>(__static_val),
                        "extents construction: mismatch of provided arguments with static extents.");
     }
   }
@@ -266,28 +266,28 @@ public:
     requires(_Size != __size_dynamic_ && __size_dynamic_ > 0)
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(const span<_Tp, _Size>& __vals) {
     static_assert((_Size == __size_) || (__size_ == dynamic_extent));
-    for (size_t __r = 0; __r < __size_; __r++) {
-      _TStatic __static_val = __static_vals_t::__get(__r);
+    for (size_t __i = 0; __i < __size_; __i++) {
+      _TStatic __static_val = __static_vals_t::__get(__i);
       if (__static_val == _DynTag) {
-        __dyn_vals_[__dyn_map_t::__get(__r)] = static_cast<_TDynamic>(__vals[__r]);
+        __dyn_vals_[__dyn_map_t::__get(__i)] = static_cast<_TDynamic>(__vals[__i]);
       }
       // Precondition check
       else
-        _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__r]) == static_cast<_TDynamic>(__static_val),
+        _LIBCPP_ASSERT(static_cast<_TDynamic>(__vals[__i]) == static_cast<_TDynamic>(__static_val),
                        "extents construction: mismatch of provided arguments with static extents.");
     }
   }
 
   // access functions
-  _LIBCPP_HIDE_FROM_ABI constexpr static _TStatic __static_value(size_t __r) noexcept {
-    return __static_vals_t::__get(__r);
+  _LIBCPP_HIDE_FROM_ABI constexpr static _TStatic __static_value(size_t __i) noexcept {
+    return __static_vals_t::__get(__i);
   }
 
-  _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic __value(size_t __r) const {
-    _TStatic __static_val = __static_vals_t::__get(__r);
-    return __static_val == _DynTag ? __dyn_vals_[__dyn_map_t::__get(__r)] : static_cast<_TDynamic>(__static_val);
+  _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic __value(size_t __i) const {
+    _TStatic __static_val = __static_vals_t::__get(__i);
+    return __static_val == _DynTag ? __dyn_vals_[__dyn_map_t::__get(__i)] : static_cast<_TDynamic>(__static_val);
   }
-  _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic operator[](size_t __r) const { return __value(__r); }
+  _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic operator[](size_t __i) const { return __value(__i); }
 
   // observers
   _LIBCPP_HIDE_FROM_ABI constexpr static size_t __size() { return __size_; }
