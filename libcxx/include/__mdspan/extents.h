@@ -190,14 +190,19 @@ public:
 
   // access functions
   _LIBCPP_HIDE_FROM_ABI static constexpr _TStatic __static_value(size_t __i) noexcept {
+    _LIBCPP_ASSERT(__i < __size_, "extents access: index must be less than rank");
     return _StaticValues::__get(__i);
   }
 
   _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic __value(size_t __i) const {
+    _LIBCPP_ASSERT(__i < __size_, "extents access: index must be less than rank");
     _TStatic __static_val = _StaticValues::__get(__i);
     return __static_val == _DynTag ? __dyn_vals_[_DynamicIdxMap::__get(__i)] : static_cast<_TDynamic>(__static_val);
   }
-  _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic operator[](size_t __i) const { return __value(__i); }
+  _LIBCPP_HIDE_FROM_ABI constexpr _TDynamic operator[](size_t __i) const {
+    _LIBCPP_ASSERT(__i < __size_, "extents access: index must be less than rank");
+    return __value(__i);
+  }
 
   // observers
   _LIBCPP_HIDE_FROM_ABI static constexpr size_t __size() { return __size_; }
@@ -205,17 +210,47 @@ public:
 };
 
 // Function to check whether a value is representable as another type
-// value must be a positive integer
+// value must be a positive integer otherwise returns false
+// if _From is not an integral, we just check positivity
 template <class _To, class _From>
+  requires(is_integral_v<_From>)
 constexpr bool __is_representable_as(_From value) {
   using _To_u   = make_unsigned_t<_To>;
   using _From_u = make_unsigned_t<_From>;
+  if constexpr (is_signed_v<_From>) {
+    if (value < 0)
+      return false;
+  }
   if constexpr (static_cast<_To_u>(std::numeric_limits<_To>::max()) >=
                 static_cast<_From_u>(std::numeric_limits<_From_u>::max())) {
     return true;
   } else {
     return static_cast<_To_u>(std::numeric_limits<_To>::max()) >= static_cast<_From_u>(value);
   }
+}
+
+template <class _To, class _From>
+  requires(!is_integral_v<_From>)
+constexpr bool __is_representable_as(_From value) {
+  using _To_u = make_unsigned_t<_To>;
+  if constexpr (is_signed_v<_To>) {
+    if (static_cast<_To>(value) < 0)
+      return false;
+  }
+  return true;
+}
+
+template <class _To, class... _From>
+constexpr bool __are_representable_as(_From... values) {
+  return (__is_representable_as<_To>(values) && ... && true);
+}
+
+template <class _To, class _From, size_t _Size>
+constexpr bool __are_representable_as(span<_From, _Size> values) {
+  for (size_t i = 0; i < _Size; i++)
+    if (!__is_representable_as<_To>(values[i]))
+      return false;
+  return true;
 }
 
 } // namespace __mdspan_detail
@@ -238,7 +273,7 @@ public:
 
   static_assert(is_integral<index_type>::value && !is_same<index_type, bool>::value,
                 "extents::index_type must be a signed or unsigned integer type");
-  static_assert(((__mdspan_detail::__is_representable_as<_IndexType>(_Extents) || (_Extents == dynamic_extent)) && ...),
+  static_assert(((__mdspan_detail::__is_representable_as<index_type>(_Extents) || (_Extents == dynamic_extent)) && ...),
                 "extents arguments must be representable as index_type");
 
 private:
@@ -269,21 +304,30 @@ public:
              (is_nothrow_constructible_v<index_type, _OtherIndexTypes> && ...) &&
              (sizeof...(_OtherIndexTypes) == __rank_ || sizeof...(_OtherIndexTypes) == __rank_dynamic_))
   _LIBCPP_HIDE_FROM_ABI constexpr explicit extents(_OtherIndexTypes... __dynvals) noexcept
-      : __vals_(static_cast<index_type>(__dynvals)...) {}
+      : __vals_(static_cast<index_type>(__dynvals)...) {
+    _LIBCPP_ASSERT(__mdspan_detail::__are_representable_as<index_type>(__dynvals...),
+                   "extents arguments must be representable as index_type");
+  }
 
   template <class _OtherIndexType, size_t _Size>
     requires(is_convertible_v<_OtherIndexType, index_type> && is_nothrow_constructible_v<index_type, _OtherIndexType> &&
              (_Size == __rank_ || _Size == __rank_dynamic_))
   explicit(_Size != __rank_dynamic_)
       _LIBCPP_HIDE_FROM_ABI constexpr extents(const array<_OtherIndexType, _Size>& __exts) noexcept
-      : __vals_(span(__exts)) {}
+      : __vals_(span(__exts)) {
+    _LIBCPP_ASSERT(__mdspan_detail::__are_representable_as<index_type>(span(__exts)),
+                   "extents arguments must be representable as index_type");
+  }
 
   template <class _OtherIndexType, size_t _Size>
     requires(is_convertible_v<_OtherIndexType, index_type> && is_nothrow_constructible_v<index_type, _OtherIndexType> &&
              (_Size == __rank_ || _Size == __rank_dynamic_))
   explicit(_Size != __rank_dynamic_)
       _LIBCPP_HIDE_FROM_ABI constexpr extents(const span<_OtherIndexType, _Size>& __exts) noexcept
-      : __vals_(__exts) {}
+      : __vals_(__exts) {
+    _LIBCPP_ASSERT(__mdspan_detail::__are_representable_as<index_type>(__exts),
+                   "extents arguments must be representable as index_type");
+  }
 
 private:
   // Function to construct extents storage from other extents.
@@ -326,7 +370,13 @@ public:
             static_cast<make_unsigned_t<_OtherIndexType>>(numeric_limits<_OtherIndexType>::max())))
       _LIBCPP_HIDE_FROM_ABI constexpr extents(const extents<_OtherIndexType, _OtherExtents...>& __other) noexcept
       : __vals_(
-            __construct_vals_from_extents(integral_constant<size_t, 0>(), integral_constant<size_t, 0>(), __other)) {}
+            __construct_vals_from_extents(integral_constant<size_t, 0>(), integral_constant<size_t, 0>(), __other)) {
+    if constexpr (rank() > 0) {
+      for (size_t __r = 0; __r < rank(); __r++)
+        _LIBCPP_ASSERT(__mdspan_detail::__is_representable_as<index_type>(__other.extent(__r)),
+                       "extents arguments must be representable as index_type");
+    }
+  }
 
   // Comparison operator
   template <class _OtherIndexType, size_t... _OtherExtents>
