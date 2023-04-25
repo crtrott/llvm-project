@@ -24,7 +24,7 @@
 #include <__type_traits/is_nothrow_constructible.h>
 #include <__type_traits/is_same.h>
 #include <__type_traits/make_unsigned.h>
-#include <__utility/move.h>
+#include <__utility/unreachable.h>
 #include <cinttypes>
 #include <cstddef>
 #include <limits>
@@ -79,8 +79,8 @@ struct __possibly_empty_array {
 
 template <class _Tp>
 struct __possibly_empty_array<_Tp, 0> {
-  _LIBCPP_HIDE_FROM_ABI constexpr _Tp& operator[](size_t) { unreachable(); }
-  _LIBCPP_HIDE_FROM_ABI constexpr const _Tp& operator[](size_t) const { unreachable(); }
+  _LIBCPP_HIDE_FROM_ABI constexpr _Tp& operator[](size_t) { __libcpp_unreachable(); }
+  _LIBCPP_HIDE_FROM_ABI constexpr const _Tp& operator[](size_t) const { __libcpp_unreachable(); }
 };
 
 // ------------------------------------------------------------------
@@ -214,41 +214,41 @@ public:
 // if _From is not an integral, we just check positivity
 template <class _To, class _From>
   requires(is_integral_v<_From>)
-constexpr bool __is_representable_as(_From value) {
+_LIBCPP_HIDE_FROM_ABI constexpr bool __is_representable_as(_From __value) {
   using _To_u   = make_unsigned_t<_To>;
   using _From_u = make_unsigned_t<_From>;
   if constexpr (is_signed_v<_From>) {
-    if (value < 0)
+    if (__value < 0)
       return false;
   }
   if constexpr (static_cast<_To_u>(std::numeric_limits<_To>::max()) >=
                 static_cast<_From_u>(std::numeric_limits<_From_u>::max())) {
     return true;
   } else {
-    return static_cast<_To_u>(std::numeric_limits<_To>::max()) >= static_cast<_From_u>(value);
+    return static_cast<_To_u>(std::numeric_limits<_To>::max()) >= static_cast<_From_u>(__value);
   }
 }
 
 template <class _To, class _From>
   requires(!is_integral_v<_From>)
-constexpr bool __is_representable_as(_From value) {
+_LIBCPP_HIDE_FROM_ABI constexpr bool __is_representable_as(_From __value) {
   using _To_u = make_unsigned_t<_To>;
   if constexpr (is_signed_v<_To>) {
-    if (static_cast<_To>(value) < 0)
+    if (static_cast<_To>(__value) < 0)
       return false;
   }
   return true;
 }
 
 template <class _To, class... _From>
-constexpr bool __are_representable_as(_From... values) {
-  return (__is_representable_as<_To>(values) && ... && true);
+_LIBCPP_HIDE_FROM_ABI constexpr bool __are_representable_as(_From... __values) {
+  return (::std::__mdspan_detail::__is_representable_as<_To>(__values) && ... && true);
 }
 
 template <class _To, class _From, size_t _Size>
-constexpr bool __are_representable_as(span<_From, _Size> values) {
-  for (size_t i = 0; i < _Size; i++)
-    if (!__is_representable_as<_To>(values[i]))
+_LIBCPP_HIDE_FROM_ABI constexpr bool __are_representable_as(span<_From, _Size> __values) {
+  for (size_t __i = 0; __i < _Size; __i++)
+    if (!::std::__mdspan_detail::__is_representable_as<_To>(__values[__i]))
       return false;
   return true;
 }
