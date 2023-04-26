@@ -274,7 +274,7 @@ public:
   static_assert(is_integral<index_type>::value && !is_same<index_type, bool>::value,
                 "extents::index_type must be a signed or unsigned integer type");
   static_assert(((__mdspan_detail::__is_representable_as<index_type>(_Extents) || (_Extents == dynamic_extent)) && ...),
-                "extents arguments must be representable as index_type");
+                "extents ctor: arguments must be representable as index_type and nonnegative");
 
 private:
   static constexpr rank_type __rank_         = sizeof...(_Extents);
@@ -306,7 +306,7 @@ public:
   _LIBCPP_HIDE_FROM_ABI constexpr explicit extents(_OtherIndexTypes... __dynvals) noexcept
       : __vals_(static_cast<index_type>(__dynvals)...) {
     _LIBCPP_ASSERT(__mdspan_detail::__are_representable_as<index_type>(__dynvals...),
-                   "extents arguments must be representable as index_type");
+                   "extents ctor: arguments must be representable as index_type and nonnegative");
   }
 
   template <class _OtherIndexType, size_t _Size>
@@ -316,7 +316,7 @@ public:
       _LIBCPP_HIDE_FROM_ABI constexpr extents(const array<_OtherIndexType, _Size>& __exts) noexcept
       : __vals_(span(__exts)) {
     _LIBCPP_ASSERT(__mdspan_detail::__are_representable_as<index_type>(span(__exts)),
-                   "extents arguments must be representable as index_type");
+                   "extents ctor: arguments must be representable as index_type and nonnegative");
   }
 
   template <class _OtherIndexType, size_t _Size>
@@ -326,7 +326,7 @@ public:
       _LIBCPP_HIDE_FROM_ABI constexpr extents(const span<_OtherIndexType, _Size>& __exts) noexcept
       : __vals_(__exts) {
     _LIBCPP_ASSERT(__mdspan_detail::__are_representable_as<index_type>(__exts),
-                   "extents arguments must be representable as index_type");
+                   "extents ctor: arguments must be representable as index_type and nonnegative");
   }
 
 private:
@@ -374,7 +374,7 @@ public:
     if constexpr (rank() > 0) {
       for (size_t __r = 0; __r < rank(); __r++)
         _LIBCPP_ASSERT(__mdspan_detail::__is_representable_as<index_type>(__other.extent(__r)),
-                       "extents arguments must be representable as index_type");
+                       "extents ctor: arguments must be representable as index_type and nonnegative");
     }
   }
 
