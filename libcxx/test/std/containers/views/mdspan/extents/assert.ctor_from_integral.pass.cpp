@@ -33,29 +33,28 @@
 
 #include <mdspan>
 #include <cassert>
-#include <array>
-#include <span>
 
 #include "check_assertion.h"
 
 int main() {
   constexpr size_t D = std::dynamic_extent;
+  // working case
   {
-    [[maybe_unused]] std::extents<int, D, 5> e1(3, 5); // should work
+    [[maybe_unused]] std::extents<int, D, 5> e1(1000, 5); // should work
   }
-
-  TEST_LIBCPP_ASSERT_FAILURE(([] { std::extents<int, D, 5> e1(3, 3); }()),
-                             "extents construction: mismatch of provided arguments with static extents.");
-  TEST_LIBCPP_ASSERT_FAILURE(
-      ([] {
-        std::extents<int, D, 5> e1(std::array{3, 3});
-      }()),
-      "extents construction: mismatch of provided arguments with static extents.");
-  TEST_LIBCPP_ASSERT_FAILURE(
-      ([] {
-        std::array a{3, 3};
-        std::span s(a);
-        std::extents<int, D, 5> e1(s);
-      }()),
-      "extents construction: mismatch of provided arguments with static extents.");
+  // mismatch of static extent
+  {
+    TEST_LIBCPP_ASSERT_FAILURE(([] { std::extents<int, D, 5> e1(1000, 3); }()),
+                               "extents construction: mismatch of provided arguments with static extents.");
+  }
+  // value out of range
+  {
+    TEST_LIBCPP_ASSERT_FAILURE(
+        ([] { std::extents<char, D, 5> e1(1000, 5); }()), "extents arguments must be representable as index_type");
+  }
+  // negative value
+  {
+    TEST_LIBCPP_ASSERT_FAILURE(
+        ([] { std::extents<char, D, 5> e1(-1, 5); }()), "extents arguments must be representable as index_type");
+  }
 }
