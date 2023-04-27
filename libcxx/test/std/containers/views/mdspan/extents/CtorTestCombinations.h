@@ -9,29 +9,6 @@
 
 // <mdspan>
 
-// constexpr extents() noexcept;
-//
-//
-// template<class... OtherIndexTypes>
-//     constexpr explicit extents(OtherIndexTypes...) noexcept;
-//
-// Remarks: These constructors shall not participate in overload resolution unless:
-//   - (is_convertible_v<OtherIndexTypes, index_type> && ...) is true,
-//   - (is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) is true, and
-//   - N == rank_dynamic() || N == rank() is true.
-//
-//
-// template<class OtherIndexType, size_t N>
-//     constexpr explicit(N != rank_dynamic()) extents(span<OtherIndexType, N>) noexcept;
-// template<class OtherIndexType, size_t N>
-//     constexpr explicit(N != rank_dynamic()) extents(const array<OtherIndexType, N>&) noexcept;
-//
-// Remarks: These constructors shall not participate in overload resolution unless:
-//   - is_convertible_v<const OtherIndexType&, index_type> is true,
-//   - is_nothrow_constructible_v<index_type, const OtherIndexType&> is true, and
-//   - N == rank_dynamic() || N == rank() is true.
-//
-
 #include <mdspan>
 #include <cassert>
 #include <array>
@@ -40,6 +17,8 @@
 #include "ConvertibleToIntegral.h"
 #include "test_macros.h"
 
+// Helper file to implement combinatorical testing of extents constructor
+//
 // std::extents can be constructed from just indices, a std::array, or a std::span
 // In each of those cases one can either provide all extents, or just the dynamic ones
 // If constructed from std::span, the span needs to have a static extent

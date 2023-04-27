@@ -11,25 +11,18 @@
 
 // <mdspan>
 
-// template<class... OtherIndexTypes>
-//     constexpr explicit extents(OtherIndexTypes...) noexcept;
+// static constexpr size_t static_extent(rank_type i) noexcept;
 //
-// Remarks: These constructors shall not participate in overload resolution unless:
-//   - (is_convertible_v<OtherIndexTypes, index_type> && ...) is true,
-//   - (is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) is true, and
-//   - N == rank_dynamic() || N == rank() is true.
+//   Preconditions: i < rank() is true.
+//
+//   Returns: Ei.
 //
 //
-// template<class OtherIndexType, size_t N>
-//     constexpr explicit(N != rank_dynamic()) extents(span<OtherIndexType, N>) noexcept;
-// template<class OtherIndexType, size_t N>
-//     constexpr explicit(N != rank_dynamic()) extents(const array<OtherIndexType, N>&) noexcept;
+// constexpr index_type extent(rank_type i) const noexcept;
 //
-// Remarks: These constructors shall not participate in overload resolution unless:
-//   - is_convertible_v<const OtherIndexType&, index_type> is true,
-//   - is_nothrow_constructible_v<index_type, const OtherIndexType&> is true, and
-//   - N == rank_dynamic() || N == rank() is true.
+//   Preconditions: i < rank() is true.
 //
+//   Returns: Di.
 
 #include <mdspan>
 #include <cassert>

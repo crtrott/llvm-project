@@ -21,6 +21,16 @@
 
 #include "test_macros.h"
 
+// <mdspan>
+//
+// template<class OtherIndexType, size_t... OtherExtents>
+//   friend constexpr bool operator==(const extents& lhs,
+//                                    const extents<OtherIndexType, OtherExtents...>& rhs) noexcept;
+//
+// Returns: true if lhs.rank() equals rhs.rank() and
+// if lhs.extent(r) equals rhs.extent(r) for every rank index r of rhs, otherwise false.
+//
+
 template <class To, class From>
 void test_comparison(bool equal, To dest, From src) {
   ASSERT_NOEXCEPT(dest == src);

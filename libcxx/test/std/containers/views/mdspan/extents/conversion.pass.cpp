@@ -12,10 +12,21 @@
 // template<class OtherIndexType, size_t... OtherExtents>
 //     constexpr explicit(see below) extents(const extents<OtherIndexType, OtherExtents...>&) noexcept;
 //
-// Remarks: These constructors shall not participate in overload resolution unless:
-//   - sizeof...(OtherExtents) == rank() is true, and
-//   - ((OtherExtents == dynamic_extent || Extents == dynamic_extent || OtherExtents == Extents) && ...) is true.
+// Constraints:
+//   * sizeof...(OtherExtents) == rank() is true.
+//   * ((OtherExtents == dynamic_extent || Extents == dynamic_extent ||
+//       OtherExtents == Extents) && ...) is true.
 //
+// Preconditions:
+//   * other.extent(r) equals Er for each r for which Er is a static extent, and
+//   * either
+//      - sizeof...(OtherExtents) is zero, or
+//      - other.extent(r) is representable as a value of type index_type for
+//        every rank index r of other.
+//
+// Remarks: The expression inside explicit is equivalent to:
+//          (((Extents != dynamic_extent) && (OtherExtents == dynamic_extent)) || ... ) ||
+//          (numeric_limits<index_type>::max() < numeric_limits<OtherIndexType>::max())
 
 #include <mdspan>
 #include <type_traits>
@@ -24,12 +35,6 @@
 #include <limits>
 
 #include "test_macros.h"
-
-// std::extents can be converted into each other as long as there aren't any
-// mismatched static extents.
-// Convertibility requires that no runtime dimension is assigned to a static dimension,
-// and that the destinations index_type has a larger or equal max value than the
-// sources index_type
 
 template <class To, class From>
 void test_implicit_conversion(To dest, From src) {

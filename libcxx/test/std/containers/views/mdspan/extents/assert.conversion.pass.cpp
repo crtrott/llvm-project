@@ -11,25 +11,24 @@
 
 // <mdspan>
 
-// template<class... OtherIndexTypes>
-//     constexpr explicit extents(OtherIndexTypes...) noexcept;
+// template<class OtherIndexType, size_t... OtherExtents>
+//     constexpr explicit(see below) extents(const extents<OtherIndexType, OtherExtents...>&) noexcept;
 //
-// Remarks: These constructors shall not participate in overload resolution unless:
-//   - (is_convertible_v<OtherIndexTypes, index_type> && ...) is true,
-//   - (is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) is true, and
-//   - N == rank_dynamic() || N == rank() is true.
+// Constraints:
+//   * sizeof...(OtherExtents) == rank() is true.
+//   * ((OtherExtents == dynamic_extent || Extents == dynamic_extent ||
+//       OtherExtents == Extents) && ...) is true.
 //
+// Preconditions:
+//   * other.extent(r) equals Er for each r for which Er is a static extent, and
+//   * either
+//      - sizeof...(OtherExtents) is zero, or
+//      - other.extent(r) is representable as a value of type index_type for
+//        every rank index r of other.
 //
-// template<class OtherIndexType, size_t N>
-//     constexpr explicit(N != rank_dynamic()) extents(span<OtherIndexType, N>) noexcept;
-// template<class OtherIndexType, size_t N>
-//     constexpr explicit(N != rank_dynamic()) extents(const array<OtherIndexType, N>&) noexcept;
-//
-// Remarks: These constructors shall not participate in overload resolution unless:
-//   - is_convertible_v<const OtherIndexType&, index_type> is true,
-//   - is_nothrow_constructible_v<index_type, const OtherIndexType&> is true, and
-//   - N == rank_dynamic() || N == rank() is true.
-//
+// Remarks: The expression inside explicit is equivalent to:
+//          (((Extents != dynamic_extent) && (OtherExtents == dynamic_extent)) || ... ) ||
+//          (numeric_limits<index_type>::max() < numeric_limits<OtherIndexType>::max())
 
 #include <mdspan>
 #include <cassert>

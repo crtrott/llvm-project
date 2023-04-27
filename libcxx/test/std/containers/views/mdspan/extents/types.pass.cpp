@@ -17,6 +17,10 @@
 //  using size_type = make_unsigned_t<index_type>;
 //  using rank_type = size_t;
 //
+//  static constexpr rank_type rank() noexcept { return sizeof...(Extents); }
+//  static constexpr rank_type rank_dynamic() noexcept { return dynamic-index(rank()); }
+//  ...
+//  }
 
 #include <mdspan>
 #include <type_traits>

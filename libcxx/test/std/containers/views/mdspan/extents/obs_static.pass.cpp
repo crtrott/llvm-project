@@ -11,8 +11,19 @@
 
 // static constexpr rank_type rank() noexcept;
 // static constexpr rank_type rank_dynamic() noexcept;
-// static constexpr size_t static_extent(rank_type) noexcept;
-// constexpr index_type extent(rank_type) const noexcept;
+//
+// static constexpr size_t static_extent(rank_type i) noexcept;
+//
+//   Preconditions: i < rank() is true.
+//
+//   Returns: Ei.
+//
+//
+// constexpr index_type extent(rank_type i) const noexcept;
+//
+//   Preconditions: i < rank() is true.
+//
+//   Returns: Di.
 //
 
 #include <mdspan>

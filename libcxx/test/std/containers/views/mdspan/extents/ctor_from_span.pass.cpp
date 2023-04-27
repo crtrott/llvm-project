@@ -9,27 +9,23 @@
 
 // <mdspan>
 
-// constexpr extents() noexcept;
-//
-//
-// template<class... OtherIndexTypes>
-//     constexpr explicit extents(OtherIndexTypes...) noexcept;
-//
-// Remarks: These constructors shall not participate in overload resolution unless:
-//   - (is_convertible_v<OtherIndexTypes, index_type> && ...) is true,
-//   - (is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) is true, and
-//   - N == rank_dynamic() || N == rank() is true.
-//
+// Test construction from span:
 //
 // template<class OtherIndexType, size_t N>
-//     constexpr explicit(N != rank_dynamic()) extents(span<OtherIndexType, N>) noexcept;
-// template<class OtherIndexType, size_t N>
-//     constexpr explicit(N != rank_dynamic()) extents(const array<OtherIndexType, N>&) noexcept;
+//     constexpr explicit(N != rank_dynamic()) extents(span<OtherIndexType, N> exts) noexcept;
 //
-// Remarks: These constructors shall not participate in overload resolution unless:
-//   - is_convertible_v<const OtherIndexType&, index_type> is true,
-//   - is_nothrow_constructible_v<index_type, const OtherIndexType&> is true, and
-//   - N == rank_dynamic() || N == rank() is true.
+// Constraints:
+//   * is_convertible_v<const OtherIndexType&, index_type> is true,
+//   * is_nothrow_constructible_v<index_type, const OtherIndexType&> is true, and
+//   * N == rank_dynamic() || N == rank() is true.
+//
+// Preconditions:
+//   * If N != rank_dynamic() is true, exts[r] equals Er for each r for which
+//     Er is a static extent, and
+//   * either
+//     - N is zero, or
+//     - exts[r] is nonnegative and is representable as a value of type index_type
+//       for every rank index r.
 //
 
 #include <mdspan>
@@ -40,11 +36,6 @@
 #include "ConvertibleToIntegral.h"
 #include "CtorTestCombinations.h"
 #include "test_macros.h"
-
-// std::extents can be constructed from just indices, a std::array, or a std::span
-// In each of those cases one can either provide all extents, or just the dynamic ones
-// If constructed from std::span, the span needs to have a static extent
-// Furthermore, the indices/array/span can have integer types other than index_type
 
 struct IntegralCtorTest {
   template <class E, class T, size_t N, class Extents, size_t... Indices>
