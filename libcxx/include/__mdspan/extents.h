@@ -126,18 +126,27 @@ struct __maybe_static_array {
 
 private:
   // Static values member
-  using _StaticValues                     = __static_array<_TStatic, _Values...>;
   static constexpr size_t __size_         = sizeof...(_Values);
   static constexpr size_t __size_dynamic_ = ((_Values == _DynTag) + ... + 0);
+  using _StaticValues                     = __static_array<_TStatic, _Values...>;
+  using _DynamicValues                    = __possibly_empty_array<_TDynamic, __size_dynamic_>;
 
   // Dynamic values member
-  [[no_unique_address]] __possibly_empty_array<_TDynamic, __size_dynamic_> __dyn_vals_;
+  [[no_unique_address]] _DynamicValues __dyn_vals_;
 
   // static mapping of indices to the position in the dynamic values array
   using _DynamicIdxMap = __static_partial_sums<static_cast<size_t>(_Values == _DynTag)...>;
 
+  // helper function to get a zero intialized _DynamicValues in default constructor
+  _LIBCPP_HIDE_FROM_ABI static constexpr _TDynamic __zero(size_t) noexcept { return 0; }
+  template <size_t... Indices>
+  _LIBCPP_HIDE_FROM_ABI static constexpr _DynamicValues __zeros(std::index_sequence<Indices...>) noexcept {
+    return _DynamicValues{__zero(Indices)...};
+  }
+
 public:
-  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array() = default;
+  _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array() noexcept
+      : __dyn_vals_{__zeros(std::make_index_sequence<__size_dynamic_>())} {}
 
   // constructors from dynamic values only -- this covers the case for rank() == 0
   template <class... _DynVals>
