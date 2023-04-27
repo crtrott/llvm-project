@@ -372,9 +372,17 @@ public:
       : __vals_(
             __construct_vals_from_extents(integral_constant<size_t, 0>(), integral_constant<size_t, 0>(), __other)) {
     if constexpr (rank() > 0) {
-      for (size_t __r = 0; __r < rank(); __r++)
-        _LIBCPP_ASSERT(__mdspan_detail::__is_representable_as<index_type>(__other.extent(__r)),
-                       "extents ctor: arguments must be representable as index_type and nonnegative");
+      for (size_t __r = 0; __r < rank(); __r++) {
+        if constexpr (static_cast<make_unsigned_t<index_type>>(numeric_limits<index_type>::max()) <
+                      static_cast<make_unsigned_t<_OtherIndexType>>(numeric_limits<_OtherIndexType>::max())) {
+          _LIBCPP_ASSERT(__mdspan_detail::__is_representable_as<index_type>(__other.extent(__r)),
+                         "extents ctor: arguments must be representable as index_type and nonnegative");
+        }
+        _LIBCPP_ASSERT(
+            (_Values::__static_value(__r) == dynamic_extent) ||
+                (static_cast<index_type>(__other.extent(__r)) == static_cast<index_type>(_Values::__static_value(__r))),
+            "extents construction: mismatch of provided arguments with static extents.");
+      }
     }
   }
 
