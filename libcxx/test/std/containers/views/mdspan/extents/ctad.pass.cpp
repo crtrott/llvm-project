@@ -22,12 +22,12 @@
 #include "test_macros.h"
 
 template <class E, class Expected>
-void test(E e, Expected expected) {
+constexpr void test(E e, Expected expected) {
   ASSERT_SAME_TYPE(E, Expected);
   assert(e == expected);
 }
 
-int main() {
+constexpr bool test() {
   constexpr std::size_t D = std::dynamic_extent;
 
   test(std::extents(), std::extents<size_t>());
@@ -35,4 +35,12 @@ int main() {
   test(std::extents(1, 2u), std::extents<std::size_t, D, D>(1, 2u));
   test(std::extents(1, 2u, 3, 4, 5, 6, 7, 8, 9),
        std::extents<std::size_t, D, D, D, D, D, D, D, D, D>(1, 2u, 3, 4, 5, 6, 7, 8, 9));
+  return true;
+}
+
+int main(int, char**) {
+  test();
+  static_assert(test());
+
+  return 0;
 }

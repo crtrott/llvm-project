@@ -32,14 +32,14 @@
 //
 
 template <class To, class From>
-void test_comparison(bool equal, To dest, From src) {
+constexpr void test_comparison(bool equal, To dest, From src) {
   ASSERT_NOEXCEPT(dest == src);
   assert((dest == src) == equal);
   assert((dest != src) != equal);
 }
 
 template <class T1, class T2>
-void test_comparison_different_rank() {
+constexpr void test_comparison_different_rank() {
   constexpr size_t D = std::dynamic_extent;
 
   test_comparison(false, std::extents<T1>(), std::extents<T2, D>(1));
@@ -58,7 +58,7 @@ void test_comparison_different_rank() {
 }
 
 template <class T1, class T2>
-void test_comparison_same_rank() {
+constexpr void test_comparison_same_rank() {
   constexpr size_t D = std::dynamic_extent;
 
   test_comparison(true, std::extents<T1>(), std::extents<T2>());
@@ -82,14 +82,21 @@ void test_comparison_same_rank() {
 }
 
 template <class T1, class T2>
-void test_comparison() {
+constexpr void test_comparison() {
   test_comparison_same_rank<T1, T2>();
   test_comparison_different_rank<T1, T2>();
 }
 
-int main() {
+constexpr bool test() {
   test_comparison<int, int>();
   test_comparison<int, size_t>();
   test_comparison<size_t, int>();
   test_comparison<size_t, long>();
+  return true;
+}
+
+int main(int, char**) {
+  test();
+  static_assert(test());
+  return 0;
 }

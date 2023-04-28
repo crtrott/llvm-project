@@ -342,7 +342,7 @@ private:
   // Function to construct extents storage from other extents.
   template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
     requires(_Idx < __rank_)
-  _LIBCPP_HIDE_FROM_ABI _Values __construct_vals_from_extents(
+  _LIBCPP_HIDE_FROM_ABI constexpr _Values __construct_vals_from_extents(
       integral_constant<size_t, _DynCount>,
       integral_constant<size_t, _Idx>,
       const _OtherExtents& __exts,
@@ -361,7 +361,7 @@ private:
 
   template <size_t _DynCount, size_t _Idx, class _OtherExtents, class... _DynamicValues>
     requires((_Idx == __rank_) && (_DynCount == __rank_dynamic_))
-  _LIBCPP_HIDE_FROM_ABI _Values __construct_vals_from_extents(
+  _LIBCPP_HIDE_FROM_ABI constexpr _Values __construct_vals_from_extents(
       integral_constant<size_t, _DynCount>,
       integral_constant<size_t, _Idx>,
       const _OtherExtents&,
