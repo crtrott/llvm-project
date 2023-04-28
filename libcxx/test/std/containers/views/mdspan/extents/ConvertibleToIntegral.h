@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef CONVERTIBLE_TO_INTEGRAL_H
-#define CONVERTIBLE_TO_INTEGRAL_H
+#ifndef TEST_STD_CONTAINERS_CONVERTIBLE_TO_INTEGRAL_H
+#define TEST_STD_CONTAINERS_CONVERTIBLE_TO_INTEGRAL_H
 
 struct IntType {
   int val;
