@@ -242,7 +242,6 @@ _LIBCPP_HIDE_FROM_ABI constexpr bool __is_representable_as(_From __value) {
 template <class _To, class _From>
   requires(!is_integral_v<_From>)
 _LIBCPP_HIDE_FROM_ABI constexpr bool __is_representable_as(_From __value) {
-  using _To_u = make_unsigned_t<_To>;
   if constexpr (is_signed_v<_To>) {
     if (static_cast<_To>(__value) < 0)
       return false;
