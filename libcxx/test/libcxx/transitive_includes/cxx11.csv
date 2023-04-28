@@ -539,6 +539,7 @@ map tuple
 map type_traits
 map utility
 map version
+mdspan array
 mdspan cinttypes
 mdspan cstddef
 mdspan limits
