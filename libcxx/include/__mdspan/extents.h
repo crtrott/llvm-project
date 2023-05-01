@@ -139,13 +139,13 @@ private:
   using _DynamicIdxMap = __static_partial_sums<static_cast<size_t>(_Values == _DynTag)...>;
 
   template <size_t... Indices>
-  _LIBCPP_HIDE_FROM_ABI static constexpr _DynamicValues __zeros(std::index_sequence<Indices...>) noexcept {
+  _LIBCPP_HIDE_FROM_ABI static constexpr _DynamicValues __zeros(index_sequence<Indices...>) noexcept {
     return _DynamicValues{(Indices, 0)...};
   }
 
 public:
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array() noexcept
-      : __dyn_vals_{__zeros(std::make_index_sequence<__size_dynamic_>())} {}
+      : __dyn_vals_{__zeros(make_index_sequence<__size_dynamic_>())} {}
 
   // constructors from dynamic values only -- this covers the case for rank() == 0
   template <class... _DynVals>
@@ -229,11 +229,11 @@ _LIBCPP_HIDE_FROM_ABI constexpr bool __is_representable_as(_From __value) {
     if (__value < 0)
       return false;
   }
-  if constexpr (static_cast<_To_u>(std::numeric_limits<_To>::max()) >=
-                static_cast<_From_u>(std::numeric_limits<_From_u>::max())) {
+  if constexpr (static_cast<_To_u>(numeric_limits<_To>::max()) >=
+                static_cast<_From_u>(numeric_limits<_From_u>::max())) {
     return true;
   } else {
-    return static_cast<_To_u>(std::numeric_limits<_To>::max()) >= static_cast<_From_u>(__value);
+    return static_cast<_To_u>(numeric_limits<_To>::max()) >= static_cast<_From_u>(__value);
   }
 }
 
