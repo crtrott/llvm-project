@@ -138,11 +138,9 @@ private:
   // static mapping of indices to the position in the dynamic values array
   using _DynamicIdxMap = __static_partial_sums<static_cast<size_t>(_Values == _DynTag)...>;
 
-  // helper function to get a zero intialized _DynamicValues in default constructor
-  _LIBCPP_HIDE_FROM_ABI static constexpr _TDynamic __zero(size_t) noexcept { return 0; }
   template <size_t... Indices>
   _LIBCPP_HIDE_FROM_ABI static constexpr _DynamicValues __zeros(std::index_sequence<Indices...>) noexcept {
-    return _DynamicValues{__zero(Indices)...};
+    return _DynamicValues{(Indices, 0)...};
   }
 
 public:
