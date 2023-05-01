@@ -133,7 +133,7 @@ private:
   using _DynamicValues                    = __possibly_empty_array<_TDynamic, __size_dynamic_>;
 
   // Dynamic values member
-  [[no_unique_address]] _DynamicValues __dyn_vals_;
+  _LIBCPP_NO_UNIQUE_ADDRESS _DynamicValues __dyn_vals_;
 
   // static mapping of indices to the position in the dynamic values array
   using _DynamicIdxMap = __static_partial_sums<static_cast<size_t>(_Values == _DynTag)...>;
