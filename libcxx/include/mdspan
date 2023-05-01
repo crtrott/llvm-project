@@ -68,9 +68,6 @@ namespace std {
 #include <__config>
 #include <__mdspan/extents.h>
 
-#include <cstddef> // for size_t
-#include <span>    // for dynamic_extent
-
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
 #endif
