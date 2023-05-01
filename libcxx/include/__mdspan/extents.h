@@ -397,14 +397,15 @@ public:
   template <class _OtherIndexType, size_t... _OtherExtents>
   _LIBCPP_HIDE_FROM_ABI friend constexpr bool
   operator==(const extents& __lhs, const extents<_OtherIndexType, _OtherExtents...>& __rhs) noexcept {
-    bool __value = true;
     if constexpr (rank() != sizeof...(_OtherExtents)) {
-      __value = false;
+      return false;
     } else {
       for (rank_type __r = 0; __r < __rank_; __r++)
-        __value &= static_cast<index_type>(__rhs.extent(__r)) == __lhs.extent(__r);
+        if (__lhs.extent(__r) == static_cast<index_type>(__rhs.extent(__r))) {
+          return false;
+        }
     }
-    return __value;
+    return true;
   }
 };
 
