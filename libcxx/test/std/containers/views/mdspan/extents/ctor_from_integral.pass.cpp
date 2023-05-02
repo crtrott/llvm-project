@@ -41,12 +41,10 @@
 
 struct IntegralCtorTest {
   template <class E, class AllExtents, class Extents, size_t... Indices>
-  static constexpr bool test_construction(AllExtents all_ext, Extents ext, std::index_sequence<Indices...>) {
-    // default construction
-    ASSERT_NOEXCEPT(E{});
+  static constexpr void test_construction(AllExtents all_ext, Extents ext, std::index_sequence<Indices...>) {
     // construction from indices
     ASSERT_NOEXCEPT(E(ext[Indices]...));
-    return test_runtime_observers(E(ext[Indices]...), all_ext);
+    test_runtime_observers(E(ext[Indices]...), all_ext);
   }
 };
 

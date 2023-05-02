@@ -25,28 +25,23 @@
 // Furthermore, the indices/array/span can have integer types other than index_type
 
 template <class E, class AllExtents>
-constexpr bool test_runtime_observers(E ext, AllExtents expected) {
+constexpr void test_runtime_observers(E ext, AllExtents expected) {
   for (typename E::rank_type r = 0; r < ext.rank(); r++) {
     ASSERT_SAME_TYPE(decltype(ext.extent(0)), typename E::index_type);
     ASSERT_NOEXCEPT(ext.extent(0));
-    bool is_equal = ext.extent(r) == static_cast<typename E::index_type>(expected[r]);
-    assert(is_equal);
-    if (!is_equal)
-      return false;
+    assert(ext.extent(r) == static_cast<typename E::index_type>(expected[r]));
   }
-  return true;
 }
 
 template <class E, class AllExtents>
-constexpr bool test_implicit_construction_call(E e, AllExtents all_ext) {
-  return test_runtime_observers(e, all_ext);
+constexpr void test_implicit_construction_call(E e, AllExtents all_ext) {
+  test_runtime_observers(e, all_ext);
 }
 
 template <class E, class Test, class AllExtents>
-constexpr bool test_construction(AllExtents all_ext) {
+constexpr void test_construction(AllExtents all_ext) {
   // test construction from all extents
-  if (!Test::template test_construction<E>(all_ext, all_ext, std::make_index_sequence<E::rank()>()))
-    return false;
+  Test::template test_construction<E>(all_ext, all_ext, std::make_index_sequence<E::rank()>());
 
   // test construction from just dynamic extents
   // create an array of just the extents corresponding to dynamic values
@@ -58,53 +53,47 @@ constexpr bool test_construction(AllExtents all_ext) {
       dynamic_idx++;
     }
   }
-  return Test::template test_construction<E>(all_ext, dyn_ext, std::make_index_sequence<E::rank_dynamic()>());
+  Test::template test_construction<E>(all_ext, dyn_ext, std::make_index_sequence<E::rank_dynamic()>());
 }
 
 template <class T, class TArg, class Test>
-constexpr bool test() {
+constexpr void test() {
   constexpr size_t D = std::dynamic_extent;
 
-  bool result = true;
-  result      = result && test_construction<std::extents<T>, Test>(std::array<TArg, 0>{});
+  test_construction<std::extents<T>, Test>(std::array<TArg, 0>{});
 
-  result = result && test_construction<std::extents<T, 3>, Test>(std::array<TArg, 1>{3});
-  result = result && test_construction<std::extents<T, D>, Test>(std::array<TArg, 1>{3});
+  test_construction<std::extents<T, 3>, Test>(std::array<TArg, 1>{3});
+  test_construction<std::extents<T, D>, Test>(std::array<TArg, 1>{3});
 
-  result = result && test_construction<std::extents<T, 3, 7>, Test>(std::array<TArg, 2>{3, 7});
-  result = result && test_construction<std::extents<T, 3, D>, Test>(std::array<TArg, 2>{3, 7});
-  result = result && test_construction<std::extents<T, D, 7>, Test>(std::array<TArg, 2>{3, 7});
-  result = result && test_construction<std::extents<T, D, D>, Test>(std::array<TArg, 2>{3, 7});
+  test_construction<std::extents<T, 3, 7>, Test>(std::array<TArg, 2>{3, 7});
+  test_construction<std::extents<T, 3, D>, Test>(std::array<TArg, 2>{3, 7});
+  test_construction<std::extents<T, D, 7>, Test>(std::array<TArg, 2>{3, 7});
+  test_construction<std::extents<T, D, D>, Test>(std::array<TArg, 2>{3, 7});
 
-  result = result && test_construction<std::extents<T, 3, 7, 9>, Test>(std::array<TArg, 3>{3, 7, 9});
-  result = result && test_construction<std::extents<T, 3, 7, D>, Test>(std::array<TArg, 3>{3, 7, 9});
-  result = result && test_construction<std::extents<T, 3, D, D>, Test>(std::array<TArg, 3>{3, 7, 9});
-  result = result && test_construction<std::extents<T, D, 7, D>, Test>(std::array<TArg, 3>{3, 7, 9});
-  result = result && test_construction<std::extents<T, D, D, D>, Test>(std::array<TArg, 3>{3, 7, 9});
-  result = result && test_construction<std::extents<T, 3, D, 9>, Test>(std::array<TArg, 3>{3, 7, 9});
-  result = result && test_construction<std::extents<T, D, D, 9>, Test>(std::array<TArg, 3>{3, 7, 9});
-  result = result && test_construction<std::extents<T, D, 7, 9>, Test>(std::array<TArg, 3>{3, 7, 9});
+  test_construction<std::extents<T, 3, 7, 9>, Test>(std::array<TArg, 3>{3, 7, 9});
+  test_construction<std::extents<T, 3, 7, D>, Test>(std::array<TArg, 3>{3, 7, 9});
+  test_construction<std::extents<T, 3, D, D>, Test>(std::array<TArg, 3>{3, 7, 9});
+  test_construction<std::extents<T, D, 7, D>, Test>(std::array<TArg, 3>{3, 7, 9});
+  test_construction<std::extents<T, D, D, D>, Test>(std::array<TArg, 3>{3, 7, 9});
+  test_construction<std::extents<T, 3, D, 9>, Test>(std::array<TArg, 3>{3, 7, 9});
+  test_construction<std::extents<T, D, D, 9>, Test>(std::array<TArg, 3>{3, 7, 9});
+  test_construction<std::extents<T, D, 7, 9>, Test>(std::array<TArg, 3>{3, 7, 9});
 
-  result = result && test_construction<std::extents<T, 1, 2, 3, 4, 5, 6, 7, 8, 9>, Test>(
-                         std::array<TArg, 9>{1, 2, 3, 4, 5, 6, 7, 8, 9});
-  result = result && test_construction<std::extents<T, D, 2, 3, D, 5, D, 7, D, 9>, Test>(
-                         std::array<TArg, 9>{1, 2, 3, 4, 5, 6, 7, 8, 9});
-  result = result && test_construction<std::extents<T, D, D, D, D, D, D, D, D, D>, Test>(
-                         std::array<TArg, 9>{1, 2, 3, 4, 5, 6, 7, 8, 9});
-  return result;
+  test_construction<std::extents<T, 1, 2, 3, 4, 5, 6, 7, 8, 9>, Test>(std::array<TArg, 9>{1, 2, 3, 4, 5, 6, 7, 8, 9});
+  test_construction<std::extents<T, D, 2, 3, D, 5, D, 7, D, 9>, Test>(std::array<TArg, 9>{1, 2, 3, 4, 5, 6, 7, 8, 9});
+  test_construction<std::extents<T, D, D, D, D, D, D, D, D, D>, Test>(std::array<TArg, 9>{1, 2, 3, 4, 5, 6, 7, 8, 9});
 }
 
 template <class Test>
 constexpr bool test_index_type_combo() {
-  bool result = true;
-  result      = result && test<int, int, Test>();
-  result      = result && test<int, size_t, Test>();
-  result      = result && test<unsigned, int, Test>();
-  result      = result && test<char, size_t, Test>();
-  result      = result && test<long long, unsigned, Test>();
-  result      = result && test<size_t, int, Test>();
-  result      = result && test<size_t, size_t, Test>();
-  result      = result && test<int, IntType, Test>();
-  result      = result && test<unsigned char, IntType, Test>();
-  return result;
+  test<int, int, Test>();
+  test<int, size_t, Test>();
+  test<unsigned, int, Test>();
+  test<char, size_t, Test>();
+  test<long long, unsigned, Test>();
+  test<size_t, int, Test>();
+  test<size_t, size_t, Test>();
+  test<int, IntType, Test>();
+  test<unsigned char, IntType, Test>();
+  return true;
 }

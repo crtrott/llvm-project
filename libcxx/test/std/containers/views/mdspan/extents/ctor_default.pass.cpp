@@ -25,9 +25,9 @@
 #include "CtorTestCombinations.h"
 #include "test_macros.h"
 
-struct IntegralCtorTest {
+struct DefaultCtorTest {
   template <class E, class AllExtents, class Extents, size_t... Indices>
-  static constexpr bool test_construction(AllExtents all_ext, Extents, std::index_sequence<Indices...>) {
+  static constexpr void test_construction(AllExtents all_ext, Extents, std::index_sequence<Indices...>) {
     // this function gets called twice: once with Extents being just dynamic ones, and once with all
     // we only test during the all extent case, since then Indices is correct number
     if constexpr (sizeof...(Indices) == E::rank()) {
@@ -37,13 +37,12 @@ struct IntegralCtorTest {
           ((E::static_extent(Indices) == std::dynamic_extent)
                ? typename AllExtents::value_type(0)
                : all_ext[Indices])...};
-      return test_runtime_observers(E{}, expected_exts);
-    } else
-      return true;
+      test_runtime_observers(E{}, expected_exts);
+    }
   }
 };
 
 int main() {
-  test_index_type_combo<IntegralCtorTest>();
-  static_assert(test_index_type_combo<IntegralCtorTest>());
+  test_index_type_combo<DefaultCtorTest>();
+  static_assert(test_index_type_combo<DefaultCtorTest>());
 }

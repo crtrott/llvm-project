@@ -37,19 +37,18 @@
 #include "CtorTestCombinations.h"
 #include "test_macros.h"
 
-struct IntegralCtorTest {
+struct ArrayCtorTest {
   template <class E, class T, size_t N, class Extents, size_t... Indices>
-  static constexpr bool test_construction(std::array<T, N> all_ext, Extents ext, std::index_sequence<Indices...>) {
+  static constexpr void test_construction(std::array<T, N> all_ext, Extents ext, std::index_sequence<Indices...>) {
     ASSERT_NOEXCEPT(E(ext));
     if constexpr (N == E::rank_dynamic()) {
-      if (!test_implicit_construction_call<E>(ext, all_ext))
-        return false;
+      test_implicit_construction_call<E>(ext, all_ext);
     }
-    return test_runtime_observers(E(ext), all_ext);
+    test_runtime_observers(E(ext), all_ext);
   }
 };
 
 int main() {
-  test_index_type_combo<IntegralCtorTest>();
-  static_assert(test_index_type_combo<IntegralCtorTest>());
+  test_index_type_combo<ArrayCtorTest>();
+  static_assert(test_index_type_combo<ArrayCtorTest>());
 }
