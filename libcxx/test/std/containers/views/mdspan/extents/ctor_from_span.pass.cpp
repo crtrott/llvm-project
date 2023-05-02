@@ -48,7 +48,39 @@ struct SpanCtorTest {
   }
 };
 
+template <class E>
+struct implicit_construction {
+  bool value;
+  implicit_construction(E) : value(true) {}
+  template <class T>
+  implicit_construction(T) : value(false) {}
+};
+
 int main() {
   test_index_type_combo<SpanCtorTest>();
   static_assert(test_index_type_combo<SpanCtorTest>());
+
+  constexpr size_t D = std::dynamic_extent;
+  using E            = std::extents<int, 1, D, 3, D>;
+
+  // check can't construct from too few arguments
+  static_assert(!std::is_constructible_v<E, std::span<int, 1>>, "extents constructible from illegal arguments");
+  // check can't construct from rank_dynamic < #args < rank
+  static_assert(!std::is_constructible_v<E, std::span<int, 3>>, "extents constructible from illegal arguments");
+  // check can't construct from too many arguments
+  static_assert(!std::is_constructible_v<E, std::span<int, 5>>, "extents constructible from illegal arguments");
+
+  // test implicit construction fails from span and array if all extents are given
+  std::array a5{3, 4, 5, 6, 7};
+  std::span<int, 5> s5(a5.data(), 5);
+  // check that explicit construction works, i.e. no error
+  static_assert(std::is_constructible_v< std::extents<int, D, D, 5, D, D>, decltype(s5)>,
+                "extents unexpectectly not constructible");
+  // check that implicit construction doesn't work
+  LIBCPP_ASSERT((implicit_construction<std::extents<int, D, D, 5, D, D>>(s5).value == false));
+
+  // test construction fails from types not convertible to index_type but convertible to other integer types
+  static_assert(std::is_convertible_v<IntType, int>, "Test helper IntType unexpectedly not convertible to int");
+  static_assert(!std::is_constructible_v< std::extents<unsigned long, D>, std::span<IntType, 1>>,
+                "extents constructible from illegal arguments");
 }

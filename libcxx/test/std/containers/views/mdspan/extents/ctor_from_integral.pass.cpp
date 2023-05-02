@@ -51,4 +51,19 @@ struct IntegralCtorTest {
 int main() {
   test_index_type_combo<IntegralCtorTest>();
   static_assert(test_index_type_combo<IntegralCtorTest>());
+
+  constexpr size_t D = std::dynamic_extent;
+  using E            = std::extents<int, 1, D, 3, D>;
+
+  // check can't construct from too few arguments
+  static_assert(!std::is_constructible_v<E, int>, "extents constructible from illegal arguments");
+  // check can't construct from rank_dynamic < #args < rank
+  static_assert(!std::is_constructible_v<E, int, int, int>, "extents constructible from illegal arguments");
+  // check can't construct from too many arguments
+  static_assert(!std::is_constructible_v<E, int, int, int, int, int>, "extents constructible from illegal arguments");
+
+  // test construction fails from types not convertible to index_type but convertible to other integer types
+  static_assert(std::is_convertible_v<IntType, int>, "Test helper IntType unexpectedly not convertible to int");
+  static_assert(!std::is_constructible_v< std::extents<unsigned long, D>, IntType>,
+                "extents constructible from illegal arguments");
 }
