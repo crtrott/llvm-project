@@ -44,12 +44,6 @@ namespace std {
       friend constexpr bool operator==(const extents&,
                                        const extents<_OtherIndexType, _OtherExtents...>&) noexcept;
 
-    // [mdspan.extents.expo], exposition-only helpers
-    constexpr size_t fwd-prod-of-extents(rank_type) const noexcept;     // exposition only
-    constexpr size_t __rev-prod-of-extents(rank_type) const noexcept;     // exposition only
-    template<class _OtherIndexType>
-      static constexpr auto index-cast(_OtherIndexType&&) noexcept;      // exposition only
-
   private:
     static constexpr rank_type dynamic-index(rank_type) noexcept;       // exposition only
     static constexpr rank_type dynamic-index-inv(rank_type) noexcept;   // exposition only
