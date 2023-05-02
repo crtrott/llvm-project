@@ -167,7 +167,7 @@ public:
     requires(sizeof...(_DynVals) != __size_dynamic_)
   _LIBCPP_HIDE_FROM_ABI constexpr __maybe_static_array(_DynVals... __vals) {
     static_assert((sizeof...(_DynVals) == __size_), "Invalid number of values.");
-    _TDynamic __values[__size_]{static_cast<_TDynamic>(__vals)...};
+    _TDynamic __values[__size_] = {static_cast<_TDynamic>(__vals)...};
     for (size_t __i = 0; __i < __size_; __i++) {
       _TStatic __static_val = _StaticValues::__get(__i);
       if (__static_val == _DynTag) {
