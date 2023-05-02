@@ -229,8 +229,7 @@ _LIBCPP_HIDE_FROM_ABI constexpr bool __is_representable_as(_From __value) {
     if (__value < 0)
       return false;
   }
-  if constexpr (static_cast<_To_u>(numeric_limits<_To>::max()) >=
-                static_cast<_From_u>(numeric_limits<_From_u>::max())) {
+  if constexpr (static_cast<_To_u>(numeric_limits<_To>::max()) >= static_cast<_From_u>(numeric_limits<_From>::max())) {
     return true;
   } else {
     return static_cast<_To_u>(numeric_limits<_To>::max()) >= static_cast<_From_u>(__value);
