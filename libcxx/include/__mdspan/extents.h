@@ -220,7 +220,7 @@ public:
 // Function to check whether a value is representable as another type
 // value must be a positive integer otherwise returns false
 // if _From is not an integral, we just check positivity
-template <class _To, class _From>
+template <integral _To, class _From>
   requires(is_integral_v<_From>)
 _LIBCPP_HIDE_FROM_ABI constexpr bool __is_representable_as(_From __value) {
   using _To_u   = make_unsigned_t<_To>;
@@ -236,7 +236,7 @@ _LIBCPP_HIDE_FROM_ABI constexpr bool __is_representable_as(_From __value) {
   }
 }
 
-template <class _To, class _From>
+template <integral _To, class _From>
   requires(!is_integral_v<_From>)
 _LIBCPP_HIDE_FROM_ABI constexpr bool __is_representable_as(_From __value) {
   if constexpr (is_signed_v<_To>) {
@@ -246,12 +246,12 @@ _LIBCPP_HIDE_FROM_ABI constexpr bool __is_representable_as(_From __value) {
   return true;
 }
 
-template <class _To, class... _From>
+template <integral _To, class... _From>
 _LIBCPP_HIDE_FROM_ABI constexpr bool __are_representable_as(_From... __values) {
   return (__mdspan_detail::__is_representable_as<_To>(__values) && ... && true);
 }
 
-template <class _To, class _From, size_t _Size>
+template <integral _To, class _From, size_t _Size>
 _LIBCPP_HIDE_FROM_ABI constexpr bool __are_representable_as(span<_From, _Size> __values) {
   for (size_t __i = 0; __i < _Size; __i++)
     if (!__mdspan_detail::__is_representable_as<_To>(__values[__i]))
