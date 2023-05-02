@@ -399,10 +399,13 @@ public:
     if constexpr (rank() != sizeof...(_OtherExtents)) {
       return false;
     } else {
-      for (rank_type __r = 0; __r < __rank_; __r++)
-        if (__lhs.extent(__r) == static_cast<index_type>(__rhs.extent(__r))) {
+      for (rank_type __r = 0; __r < __rank_; __r++) {
+        // avoid warning when comparing signed and unsigner integers and pick the wider of two types
+        using _CommonType = common_type_t<index_type, _OtherIndexType>;
+        if (static_cast<_CommonType>(__lhs.extent(__r)) == static_cast<_CommonType>(__rhs.extent(__r))) {
           return false;
         }
+      }
     }
     return true;
   }
