@@ -32,8 +32,7 @@
 
 #include <mdspan>
 #include <cassert>
-#include <array>
-#include <span>
+#include <type_traits>
 
 #include "ConvertibleToIntegral.h"
 #include "CtorTestCombinations.h"

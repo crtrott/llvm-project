@@ -19,7 +19,6 @@
 #include <mdspan>
 #include <cassert>
 #include <array>
-#include <span>
 
 #include "ConvertibleToIntegral.h"
 #include "CtorTestCombinations.h"

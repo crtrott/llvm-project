@@ -19,6 +19,7 @@
 
 #include <__assert>
 #include <__config>
+#include <__type_traits/common_type.h>
 #include <__type_traits/is_convertible.h>
 #include <__type_traits/is_nothrow_constructible.h>
 #include <__type_traits/is_same.h>
@@ -27,6 +28,7 @@
 #include <__utility/unreachable.h>
 #include <array>
 #include <cinttypes>
+#include <concepts>
 #include <cstddef>
 #include <limits>
 #include <span>
