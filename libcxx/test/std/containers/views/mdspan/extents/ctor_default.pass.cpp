@@ -32,7 +32,7 @@ struct DefaultCtorTest {
     // we only test during the all extent case, since then Indices is correct number
     if constexpr (sizeof...(Indices) == E::rank()) {
       ASSERT_NOEXCEPT(E{});
-      // Need to construct new exepcted values, replacing dynamic values with 0
+      // Need to construct new expected values, replacing dynamic values with 0
       std::array<typename AllExtents::value_type, E::rank()> expected_exts{
           ((E::static_extent(Indices) == std::dynamic_extent)
                ? typename AllExtents::value_type(0)
