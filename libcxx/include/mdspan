@@ -45,8 +45,8 @@ namespace std {
                                        const extents<_OtherIndexType, _OtherExtents...>&) noexcept;
 
   private:
-    static constexpr rank_type dynamic-index(rank_type) noexcept;       // exposition only
-    static constexpr rank_type dynamic-index-inv(rank_type) noexcept;   // exposition only
+    // libcxx note: we do not use an array here, but we need to preserve the as-if behavior
+    // for example the default constructor must zero initialize dynamic extents
     array<index_type, rank_dynamic()> dynamic-extents{};                // exposition only
   };
 

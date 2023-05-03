@@ -92,7 +92,7 @@ struct __possibly_empty_array<_Tp, 0> {
 
 // Provides a compile time partial sum one can index into
 
-template <std::size_t... _Values>
+template <size_t... _Values>
 _LIBCPP_HIDE_FROM_ABI constexpr __possibly_empty_array<size_t, sizeof...(_Values)> __static_partial_sums_impl() {
   __possibly_empty_array<size_t, sizeof...(_Values)> __values = {_Values...};
   __possibly_empty_array<size_t, sizeof...(_Values)> __partial_sums;

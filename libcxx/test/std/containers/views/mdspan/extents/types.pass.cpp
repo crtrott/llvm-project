@@ -43,7 +43,7 @@ void testExtents() {
 
 // Did never find a way to make this true on windows
 #ifndef _WIN32
-  static_assert(std::is_empty_v<E> == (E::rank_dynamic() == 0));
+  LIBCPP_STATIC_ASSERT(std::is_empty_v<E> == (E::rank_dynamic() == 0));
 #endif
 }
 

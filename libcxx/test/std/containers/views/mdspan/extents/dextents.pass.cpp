@@ -12,7 +12,9 @@
 // template<class IndexType, size_t Rank>
 //     using dextents = see below;
 //
-// Result: A type E that is a specialization of extents such that E::rank() == Rank && E::rank() == E::rank_dynamic() is true, and E::index_type denotes IndexType.
+// Result: A type E that is a specialization of extents such that
+//         E::rank() == Rank && E::rank() == E::rank_dynamic() is true,
+//         and E::index_type denotes IndexType.
 
 #include <mdspan>
 #include <cstddef>
