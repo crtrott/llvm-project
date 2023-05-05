@@ -452,6 +452,8 @@ set(files
   __locale_dir/locale_base_api/locale_guard.h
   __mbstate_t.h
   __mdspan/extents.h
+  __mdspan/layouts.h
+  __mdspan/layout_right_mapping.h
   __memory/addressof.h
   __memory/align.h
   __memory/aligned_alloc.h
