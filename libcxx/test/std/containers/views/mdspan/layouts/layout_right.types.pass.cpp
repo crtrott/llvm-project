@@ -30,15 +30,17 @@
 
 #include "test_macros.h"
 
-template<class M>
-void test_mapping_requirements() {
+
+// Common requirements of all layout mappings
+template<class M, size_t ... Idxs>
+void test_mapping_requirements(std::index_sequence<Idxs...>) {
   using E = typename M::extents_type;
   static_assert(std::__mdspan_detail::__is_extents<E>(), "");
   static_assert(std::is_same_v<typename M::index_type, typename E::index_type>, "");
   static_assert(std::is_same_v<typename M::rank_type, typename E::rank_type>, "");
   static_assert(std::is_same_v<typename M::layout_type::template mapping<E>, M>, "");
   static_assert(std::is_same_v<decltype(std::declval<M>().extents()), const E&>, "");
-  static_assert(std::is_same_v<decltype(std::declval<M>()(0,0)), typename M::index_type>, "");
+  static_assert(std::is_same_v<decltype(std::declval<M>()(Idxs...)), typename M::index_type>, "");
   static_assert(std::is_same_v<decltype(std::declval<M>().required_span_size()), typename M::index_type>, "");
   static_assert(std::is_same_v<decltype(std::declval<M>().is_unique()), bool>, "");
   static_assert(std::is_same_v<decltype(std::declval<M>().is_exhaustive()), bool>, "");
@@ -49,16 +51,30 @@ void test_mapping_requirements() {
   static_assert(std::is_same_v<decltype(M::is_always_strided()), bool>, "");
 }
 
+
 template<class L, class E>
-void test_layout_mapping() {
-  //using M = L::template mapping<E>;
-  test_mapping_requirements<typename L::template mapping<E>>();
+void test_layout_mapping_requirements() {
+  using M = typename L::template mapping<E>;
+  test_mapping_requirements<M>(std::make_index_sequence<E::rank()>());
+}
+
+template<class E>
+void test_layout_mapping_right() {
+  test_layout_mapping_requirements<std::layout_right, E>();
+
+  using M = std::layout_right::template mapping<E>;
+  static_assert(M::is_unique() == true, "");
+  static_assert(M::is_exhaustive() == true, "");
+  static_assert(M::is_strided() == true, "");
+  static_assert(M::is_always_unique() == true, "");
+  static_assert(M::is_always_exhaustive() == true, "");
+  static_assert(M::is_always_strided() == true, "");
 }
 
 int main() {
   constexpr size_t D = std::dynamic_extent;
-  test_layout_mapping<std::layout_right, std::extents<int>>();
-  test_layout_mapping<std::layout_right, std::extents<char, 4, 5>>();
-  test_layout_mapping<std::layout_right, std::extents<unsigned, D, 4>>();
-  test_layout_mapping<std::layout_right, std::extents<size_t, D, D, D, D>>();
+  test_layout_mapping_right<std::extents<int>>();
+  test_layout_mapping_right<std::extents<char, 4, 5>>();
+  test_layout_mapping_right<std::extents<unsigned, D, 4>>();
+  test_layout_mapping_right<std::extents<size_t, D, D, D, D>>();
 }
