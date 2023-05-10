@@ -20,6 +20,7 @@
 #include <__config>
 #include <__mdspan/extents.h>
 #include <__mdspan/layouts.h>
+#include <__utility/unreachable.h>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
 #  pragma GCC system_header
@@ -133,7 +134,16 @@ public:
   static constexpr bool is_exhaustive() noexcept { return true; }
   static constexpr bool is_strided() noexcept { return true; }
 
-  constexpr index_type stride(rank_type) const noexcept { return 0; }
+  constexpr index_type stride(rank_type __r) const noexcept {
+    _LIBCPP_ASSERT(__r < extents_type::rank(), "layout_right::mapping::stride(): invalid rank index");
+    if constexpr (extents_type::rank() > 0) {
+      index_type __s = 1;
+      for (rank_type __i = extents_type::rank() - 1; __i > __r; __i--)
+        __s *= __extents_.extent(__i);
+      return __s;
+    }
+    __libcpp_unreachable();
+  }
 
   template <class _OtherExtents>
   friend constexpr bool operator==(const mapping& __lhs, const mapping<_OtherExtents>& __rhs) noexcept {
