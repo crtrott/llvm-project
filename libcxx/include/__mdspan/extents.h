@@ -443,9 +443,9 @@ using dextents = typename __mdspan_detail::__make_dextents<_IndexType, _Rank>::t
 template <class... _IndexTypes>
 extents(_IndexTypes...) -> extents<size_t, size_t((_IndexTypes(), dynamic_extent))...>;
 
-// Helper type traits for identifying a class as extents.
 namespace __mdspan_detail {
 
+// Helper type traits for identifying a class as extents.
 template <class _Tp>
 struct __is_extents : false_type {};
 
@@ -454,6 +454,43 @@ struct __is_extents<extents<_IndexType, _ExtentsPack...>> : true_type {};
 
 template <class _Tp>
 inline constexpr bool __is_extents_v = __is_extents<_Tp>::value;
+
+// Function to check whether a set of indicies are a multidimensional
+// index into extents. This is a word of power in the C++ standard
+// requiring that the indices are larger than 0 and smaller than
+// the respective extents.
+
+template <integral _IndexType, class _From>
+  requires(is_integral_v<_From>)
+_LIBCPP_HIDE_FROM_ABI constexpr bool __is_multidimensional_index_in(_IndexType __extent, _From __value) {
+  if constexpr (is_signed_v<_From>) {
+    if (__value < 0)
+      return false;
+  }
+  using _Tp = common_type_t<_IndexType, _From>;
+  return static_cast<_Tp>(__value) < static_cast<_Tp>(__extent);
+}
+
+template <integral _IndexType, class _From>
+  requires(!is_integral_v<_From>)
+_LIBCPP_HIDE_FROM_ABI constexpr bool __is_multidimensional_index_in(_IndexType __extent, _From __value) {
+  if constexpr (is_signed_v<_IndexType>) {
+    if (static_cast<_IndexType>(__value) < 0)
+      return false;
+  }
+  return static_cast<_IndexType>(__value) < __extent;
+}
+
+template <size_t... _Idxs, class _Extents, class... _From>
+_LIBCPP_HIDE_FROM_ABI constexpr bool
+__is_multidimensional_index_in(index_sequence<_Idxs...>, _Extents __ext, _From... __values) {
+  return (__is_multidimensional_index_in(__ext.extent(_Idxs), __values) && ...);
+}
+
+template <class _Extents, class... _From>
+_LIBCPP_HIDE_FROM_ABI constexpr bool __is_multidimensional_index_in(_Extents __ext, _From... __values) {
+  return __is_multidimensional_index_in(make_index_sequence<_Extents::rank()>(), __ext, __values...);
+}
 
 } // namespace __mdspan_detail
 
