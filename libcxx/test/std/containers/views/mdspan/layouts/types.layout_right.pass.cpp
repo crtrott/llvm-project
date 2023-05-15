@@ -69,6 +69,16 @@ void test_layout_mapping_right() {
   static_assert(M::is_always_unique() == true, "");
   static_assert(M::is_always_exhaustive() == true, "");
   static_assert(M::is_always_strided() == true, "");
+
+  ASSERT_NOEXCEPT(std::declval<M>().extents());
+  ASSERT_NOEXCEPT(std::declval<M>().required_span_size());
+  ASSERT_NOEXCEPT(std::declval<M>().is_unique());
+  ASSERT_NOEXCEPT(std::declval<M>().is_exhaustive());
+  ASSERT_NOEXCEPT(std::declval<M>().is_strided());
+  ASSERT_NOEXCEPT(std::declval<M>().stride(0));
+  ASSERT_NOEXCEPT(M::is_always_unique());
+  ASSERT_NOEXCEPT(M::is_always_exhaustive());
+  ASSERT_NOEXCEPT(M::is_always_strided());
 }
 
 int main() {

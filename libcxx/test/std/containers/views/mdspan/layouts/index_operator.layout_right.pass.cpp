@@ -26,6 +26,7 @@ template<class M, class T, class ... Args>
 constexpr void iterate_right(M m, T& count, Args ... args) {
   constexpr size_t r = sizeof...(Args);
   if constexpr (M::extents_type::rank() == r) {
+    ASSERT_NOEXCEPT(m(args...));
     assert(count == m(args...));
     count++;
   } else {

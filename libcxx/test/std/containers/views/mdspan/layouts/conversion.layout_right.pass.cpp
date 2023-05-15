@@ -46,7 +46,10 @@ constexpr void test_conversion(FromE src_exts) {
   using To   = typename std::layout_right::template mapping<ToE>;
   using From = typename std::layout_right::template mapping<FromE>;
   From src(src_exts);
+
+  ASSERT_NOEXCEPT(To(src));
   To dest(src);
+
   assert(dest == src);
   if constexpr (implicit) {
     dest = src;
